@@ -21,12 +21,14 @@ const {addsellSugarcane,
     UpdateView,
     fetchTotalAmount,createPayment,fetchPaymentHistory,
     addDeisleCost,
+    placeOrderByadmin,
     fetchDeisleCost,fetchsellSugarcaneAllData,addPayment,fetchOrder, updateProductCart,placeOrder,deleteProductCart,fetchCartItems,addProductCart,loginUser,register,login,addCategory,fetchCategory,fetchCategorybyId,updateCategory,deleteCategory,fetchActiveCategory,addProduct,fetchProduct,
     fetchActiveProduct
  } = userController; 
 
 router.post('/login', login);
 router.post('/fetchOrder', fetchOrder);
+router.post('/placeOrderByadmin', placeOrderByadmin);
 router.post('/UpdateView', UpdateView);
 router.post('/updateUserCart', updateUserCart);
 router.post('/fetchorderdetails', fetchorderdetails);

@@ -1459,16 +1459,21 @@ const fetchPaymentHistory = async (req, res) => {
     const ordersData = await sequelize.query(`
       SELECT 
         'order' AS source, 
-        id AS OID, 
-        tPrice AS AMOUNT, 
-        DATE_FORMAT(created_at, '%d/%m/%Y') AS cDate
-      FROM orders 
-      WHERE user_id = ?
-      ORDER BY created_at DESC
+        o.id AS OID, 
+        o.tPrice AS AMOUNT, 
+        DATE_FORMAT(o.created_at, '%Y-%m-%d %H:%i:%s') AS cDateTime,
+        c.quantity AS quantity,               
+        p.p_name AS product_name              
+      FROM orders o
+      JOIN cart c ON o.id = c.order_id       
+      JOIN product p ON c.product_id = p.id   
+      WHERE o.user_id = ?                     
+      ORDER BY o.created_at DESC
     `, { 
-      replacements: [userId], // Ensure userId is passed
+      replacements: [userId], 
       type: QueryTypes.SELECT 
     });
+    
 
     // Fetch data from the 'paymentdone' table
     const paymentdoneData = await sequelize.query(`
@@ -1476,22 +1481,22 @@ const fetchPaymentHistory = async (req, res) => {
         'paid' AS source, 
         id AS OID, 
         amount AS AMOUNT, 
-        DATE_FORMAT(created_at, '%d/%m/%Y') AS cDate
+        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS cDateTime
       FROM paymentdone 
       WHERE user_id = ?
       ORDER BY created_at DESC
     `, { 
-      replacements: [userId], // Ensure userId is passed
+      replacements: [userId], 
       type: QueryTypes.SELECT 
     });
 
-    // Merge both datasets and sort them by cDate
+    // Merge both datasets and sort them by cDateTime
     const mergedData = [...ordersData, ...paymentdoneData].sort((a, b) => {
-      const dateA = new Date(a.cDate.split('/').reverse().join('-')); // Convert 'DD/MM/YYYY' to 'YYYY-MM-DD'
-      const dateB = new Date(b.cDate.split('/').reverse().join('-')); // Convert 'DD/MM/YYYY' to 'YYYY-MM-DD'
-      return dateB - dateA; // Sort in descending order
+      const dateTimeA = new Date(a.cDateTime);
+      const dateTimeB = new Date(b.cDateTime);
+      return dateTimeB - dateTimeA; // Sort in descending order
     });
-    
+
     // Return data if found
     if (mergedData.length > 0) {
       return res.status(200).send({
@@ -1515,6 +1520,7 @@ const fetchPaymentHistory = async (req, res) => {
     });
   }
 };
+
 
 
 const fetchTotalAmount = async (req, res) => {
@@ -1773,7 +1779,51 @@ const UpdateView = async (req, res) => {
   }
 };
 
+const placeOrderByadmin = async (req, res) => {
+  try {
+    const {  product_id, user_id, quantity, price} = req.body;
 
+    const [existingUserCart] = await sequelize.query('SELECT * FROM cart WHERE product_id = ? AND user_id = ? AND status = ?',
+      { replacements: [product_id,user_id, 0], type: QueryTypes.SELECT });
+
+
+    if (!existingUserCart) {
+      const result = await sequelize.query(
+        'INSERT INTO cart (product_id, user_id,quantity,price) VALUES (?,?,?,?)',
+        {
+          replacements: [product_id, user_id,quantity,price],
+          type: QueryTypes.INSERT
+        }
+      );
+  
+      if (result && result[0] != null) {
+
+        const resultOrder = await sequelize.query(
+          'INSERT INTO orders (user_id, tPrice) VALUES (?, ?)',
+          { replacements: [user_id, price], type: QueryTypes.INSERT }
+        );
+
+        if (resultOrder && resultOrder[0] != null) {
+          const insertedId = resultOrder[0];
+          const resultUpdate = await sequelize.query(
+            'UPDATE cart SET status = 1, order_id = ? WHERE user_id = ? AND status = 0',
+            { replacements: [insertedId, user_id], type: QueryTypes.UPDATE }
+          );
+          res.status(200).json({ message: 'Order created', error: false });
+        } else {
+          res.status(400).json({ message: 'Order not created', error: true });
+        }
+      } else {
+        res.status(400).json({ message: 'Order not created', error: true });
+      }
+    } else {
+      return res.status(404).send({ error: true, message: 'Product already exist in cart!' });
+    }
+  } catch (error) {
+    console.error('Error creating Category:', error);
+    res.status(500).json({ message: 'Internal server error', error: true });
+  }
+};
 
 module.exports = {
   login,
@@ -1783,6 +1833,7 @@ module.exports = {
   addProductCart,
   fetchAllUsers,
   updateUserCart,
+  placeOrderByadmin,
   updateProductCart,
   deleteProductCart,
   fetchordersforadmin,
