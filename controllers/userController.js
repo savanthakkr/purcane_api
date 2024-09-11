@@ -10,7 +10,7 @@ const otpGenerator = require('otp-generator');
 const { broadcastMessage } = require('./soketController');
 
 const nodemailer = require('nodemailer');
-const { error } = require('console');
+const { error, log } = require('console');
 const QRCode = require('qrcode');
 const multer = require('multer');
 // Set up storage with multer to store images in the 'uploads' directory
@@ -334,7 +334,7 @@ const deleteCategory = async (req, res) => {
 
 const addProduct = async (req, res) => {
   try {
-    const { cId,pname,pdesc,pimage,pprice,pqunt } = req.body;
+    const { cId,pname,pdesc,pimage,pprice,sellPrice,pqunt } = req.body;
 
     const existingProduct = await sequelize.query(
       'SELECT * FROM product WHERE category_id = ? AND LOWER(p_name) = LOWER(?)',
@@ -349,9 +349,9 @@ const addProduct = async (req, res) => {
 
       // Insert new jobseeker into the database
       const result = await sequelize.query(
-        'INSERT INTO product (category_id, p_name,p_desc,p_image,p_price,availble_quntity) VALUES (?,?,?,?,?,?)',
+        'INSERT INTO product (category_id, p_name,p_desc,p_image,p_price,sellPrice,availble_quntity) VALUES (?,?,?,?,?,?,?)',
         {
-          replacements: [cId,pname,pdesc,imagePath,pprice,pqunt],
+          replacements: [cId,pname,pdesc,imagePath,pprice,sellPrice,pqunt],
           type: QueryTypes.INSERT
         }
       );
@@ -366,7 +366,7 @@ const addProduct = async (req, res) => {
   }
 };
 
-const fetchProduct = async (req, res) => {
+const fetchProductAdmin = async (req, res) => {
   try {
 
     const productList = await sequelize.query('SELECT product.*,category.id as CID,category.cat_name as CNAME FROM product INNER JOIN category ON product.category_id = category.id',
@@ -386,6 +386,53 @@ const fetchProduct = async (req, res) => {
     });
   }
 };
+
+const fetchProduct = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    log
+
+    // Query to fetch product details and price logic
+    const productList = await sequelize.query(`
+      SELECT product.*, category.id AS CID, category.cat_name AS CNAME,
+        CASE 
+          WHEN register.sellPriceStatus = 1 THEN product.sellPrice
+          ELSE product.p_price
+        END AS final_price
+      FROM product
+      INNER JOIN category ON product.category_id = category.id
+      INNER JOIN register ON register.id = :userId
+      WHERE product.status = :status
+    `, 
+    {
+      replacements: { userId, status: '0' }, // Use named replacements
+      type: QueryTypes.SELECT
+    });
+
+    if (productList.length > 0) {
+      return res.status(200).send({
+        error: false,
+        message: 'Product Fetch Successfully',
+        Product: productList
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: 'Product not found',
+        Product: []
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
+
 
 const fetchActiveProduct = async (req, res) => {
   try {
@@ -637,14 +684,14 @@ const fetchOrder = async (req, res) => {
             tPrice,
             created_at,
             status,
-            cartItems: []
+            cartItemsOrder: []
           };
         }
 
         // If there's cart data (cart table could be empty in some cases), push cart and product items
         if (cartAndProductData.id) {
-          acc[order_id].cartItems.push({
-            cart: {
+          acc[order_id].cartItemsOrder.push(
+            {
               id: cartAndProductData.id,
               quantity: cartAndProductData.quantity,
               price: cartAndProductData.price,
@@ -655,7 +702,7 @@ const fetchOrder = async (req, res) => {
               pPrice: cartAndProductData.	p_price,
               imageUrl: cartAndProductData.	p_image
             }
-          });
+          );
         }
 
         return acc;
@@ -1647,6 +1694,31 @@ const updateUserCart = async (req, res) => {
   }
 };
 
+
+const fetchAllUsers = async (req, res) => {
+  try {
+
+    const productList = await sequelize.query('SELECT * FROM register',
+      { replacements: [], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', Users: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', Users: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
+      error: true
+    });
+  }
+};
+
+
+
+
 // const fetchorderdetails = async (req, res) => {
 //   try {
 
@@ -1683,12 +1755,33 @@ const updateUserCart = async (req, res) => {
 //   }
 // };
 
+const UpdateView = async (req, res) => {
+  const { userId ,sellPriceStatus } = req.body;
+
+  try {
+    // Fetch orders created in the last hour with status '1'
+    const result = await sequelize.query(
+      'UPDATE register SET sellPriceStatus = ? WHERE id = ?',
+      { replacements: [sellPriceStatus, userId], type: QueryTypes.UPDATE }
+    );
+
+    res.status(200).json({ message: 'Update done!', error: false });
+
+  } catch (error) {
+    console.error('Error processing Update:', error);
+    res.status(500).json({ message: 'Internal server error', error: true });
+  }
+};
+
+
 
 module.exports = {
   login,
   loginUser,
   fetchCartItems,
+  UpdateView,
   addProductCart,
+  fetchAllUsers,
   updateUserCart,
   updateProductCart,
   deleteProductCart,
@@ -1707,6 +1800,7 @@ module.exports = {
   fetchOrder,
   register,
   addsellSugarcane,
+  fetchProductAdmin,
   fetchsellSugarcane,
   addPayment,
   addpurchaseSugarcane,

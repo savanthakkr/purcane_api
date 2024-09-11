@@ -13,9 +13,12 @@ const {addsellSugarcane,
     fetchpurchaseTransportCost,
     adddailyWages,
     fetchdailyWages,
+    fetchProductAdmin,
     updateUserCart,
+    fetchAllUsers,
     fetchorderdetails,
     fetchordersforadmin,
+    UpdateView,
     fetchTotalAmount,createPayment,fetchPaymentHistory,
     addDeisleCost,
     fetchDeisleCost,fetchsellSugarcaneAllData,addPayment,fetchOrder, updateProductCart,placeOrder,deleteProductCart,fetchCartItems,addProductCart,loginUser,register,login,addCategory,fetchCategory,fetchCategorybyId,updateCategory,deleteCategory,fetchActiveCategory,addProduct,fetchProduct,
@@ -24,10 +27,12 @@ const {addsellSugarcane,
 
 router.post('/login', login);
 router.post('/fetchOrder', fetchOrder);
+router.post('/UpdateView', UpdateView);
 router.post('/updateUserCart', updateUserCart);
 router.post('/fetchorderdetails', fetchorderdetails);
 router.get('/fetchsellSugarcaneAllData', fetchsellSugarcaneAllData);
 router.get('/fetchordersforadmin', fetchordersforadmin);
+router.get('/fetchAllUsers', fetchAllUsers);
 router.post('/addPayment', addPayment);
 router.post('/createPayment', createPayment);
 router.post('/fetchTotalAmount', fetchTotalAmount);
@@ -44,9 +49,10 @@ router.post('/fetchCategorybyId', fetchCategorybyId);
 router.post('/updateCategory', updateCategory);
 router.post('/deleteCategory', deleteCategory);
 router.get('/fetchCategory', fetchCategory);
+router.get('/fetchProductAdmin', fetchProductAdmin);
 router.get('/fetchActiveCategory', fetchActiveCategory);
 router.post('/addProduct', addProduct);
-router.get('/fetchProduct', fetchProduct);
+router.post('/fetchProduct', fetchProduct);
 router.get('/fetchActiveProduct', fetchActiveProduct);
 router.post('/addsellSugarcane', addsellSugarcane);
 router.get('/fetchsellSugarcane', fetchsellSugarcane);
