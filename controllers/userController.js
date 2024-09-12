@@ -635,7 +635,7 @@ const addPayment = async (req, res) => {
     // Loop through the results and insert into paymentDone
     for (const order of UserOrderResult) {
       const result = await sequelize.query(
-        'INSERT INTO paymentdone (user_id, order_id, amount,status) VALUES (?, ?, ?,?)',
+        'INSERT INTO paymentDone (user_id, order_id, amount,status) VALUES (?, ?, ?,?)',
         { replacements: [userId, order.id, price,'0'], type: QueryTypes.INSERT }
       );
       
@@ -1482,7 +1482,7 @@ const fetchPaymentHistory = async (req, res) => {
         id AS OID, 
         amount AS AMOUNT, 
         DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS cDateTime
-      FROM paymentdone 
+      FROM paymentDone 
       WHERE user_id = ?
       ORDER BY created_at DESC
     `, { 
@@ -1541,7 +1541,7 @@ const fetchTotalAmount = async (req, res) => {
     );
 
     const paymentDoneResult = await sequelize.query(
-      `SELECT SUM(amount) as PDAMT FROM paymentdone 
+      `SELECT SUM(amount) as PDAMT FROM paymentDone 
        WHERE user_id = ? 
        AND status = ?`,
       {
@@ -1551,7 +1551,7 @@ const fetchTotalAmount = async (req, res) => {
     );
 
     const paymentPendingResult = await sequelize.query(
-      `SELECT SUM(amount) as PPAMT FROM paymentdone 
+      `SELECT SUM(amount) as PPAMT FROM paymentDone 
        WHERE user_id = ? 
        AND status = ?`,
       {
@@ -1593,7 +1593,7 @@ const createPayment = async (req, res) => {
   try {
     // Fetch orders created in the last hour with status '1'
     const result = await sequelize.query(
-      'INSERT INTO paymentdone (user_id, amount,status) VALUES (?,?,?)',
+      'INSERT INTO paymentDone (user_id, amount,status) VALUES (?,?,?)',
       { replacements: [userId, price,'0'], type: QueryTypes.INSERT }
     );
 
