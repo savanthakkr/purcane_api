@@ -1523,6 +1523,9 @@ const fetchPaymentHistory = async (req, res) => {
 
 
 
+
+
+
 const fetchTotalAmount = async (req, res) => {
   const { userId } = req.body;
 
@@ -1825,9 +1828,100 @@ const placeOrderByadmin = async (req, res) => {
   }
 };
 
+const fetchInventory = async (req, res) => {
+  try {
+    const productList = await sequelize.query(
+      'SELECT inventory.*,category.cat_name,product.p_name FROM inventory INNER JOIN category ON inventory.category_id = category.id INNER JOIN product ON inventory.product_id = product.id ORDER BY inventory.created_at DESC',
+      { replacements: [], type: QueryTypes.SELECT }
+    );
+
+    if (productList.length > 0) {
+      // Group the inventory items by date with custom keys
+      const inventoryByDate = productList.reduce((acc, item) => {
+        const date = item.created_at.toISOString().split('T')[0]; // format date as YYYY-MM-DD
+        
+        const existingDateGroup = acc.find(group => group.addDate === date);
+
+        if (existingDateGroup) {
+          existingDateGroup.inventory.push(item);
+        } else {
+          acc.push({
+            addDate: date,
+            inventory: [item]
+          });
+        }
+
+        return acc;
+      }, []);
+
+      return res.status(200).send({ 
+        error: false, 
+        message: 'Data Fetched Successfully', 
+        AllInventory: inventoryByDate 
+      });
+    } else {
+      return res.status(404).send({ 
+        error: true, 
+        message: 'Data not found', 
+        AllInventory: [] 
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
+      error: true
+    });
+  }
+};
+
+const createInventory = async (req, res) => {
+  const { category_id, product_id,quantity,base_price,total_amount } = req.body;
+
+  try {
+    // Fetch orders created in the last hour with status '1'
+    const result = await sequelize.query(
+      'INSERT INTO inventory (category_id, product_id,quantity,base_price,total_amount) VALUES (?,?,?,?,?)',
+      { replacements: [category_id, product_id,quantity,base_price,total_amount], type: QueryTypes.INSERT }
+    );
+
+    res.status(200).json({ message: 'inventory added!', error: false });
+
+  } catch (error) {
+    console.error('Error processing payment:', error);
+    res.status(500).json({ message: 'Internal server error', error: true });
+  }
+}; 
+
+
+const fetchProductAdminById = async (req, res) => {
+  try {
+
+    const { cId } = req.body;
+
+    const productList = await sequelize.query('SELECT product.*,category.id as CID,category.cat_name as CNAME FROM product INNER JOIN category ON product.category_id = category.id WHERE product.category_id = ?',
+      { replacements: [cId], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Product Fetch Successfully', Product: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Product not found', Product: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
+
 module.exports = {
   login,
   loginUser,
+  createInventory,
   fetchCartItems,
   UpdateView,
   addProductCart,
@@ -1845,10 +1939,12 @@ module.exports = {
   updateCategory,
   deleteCategory,
   fetchActiveCategory,
+  fetchInventory,
   addProduct,
   fetchProduct,
   fetchActiveProduct,
   fetchOrder,
+  fetchProductAdminById,
   register,
   addsellSugarcane,
   fetchProductAdmin,
