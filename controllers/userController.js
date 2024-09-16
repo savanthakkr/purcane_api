@@ -1533,9 +1533,9 @@ const fetchTotalAmount = async (req, res) => {
     // Fetch orders created in the last hour with status '1'
     const UserOrderResult = await sequelize.query(
       `SELECT SUM(tPrice) as OAMT FROM orders 
-       WHERE user_id = ?`,
+       WHERE user_id = ? AND status = ?`,
       {
-        replacements: [userId],
+        replacements: [userId,'2'],
         type: QueryTypes.SELECT
       }
     );
@@ -1588,13 +1588,13 @@ const fetchTotalAmount = async (req, res) => {
 };
 
 const createPayment = async (req, res) => {
-  const { userId, price } = req.body;
+  const { userId, price,status } = req.body;
 
   try {
     // Fetch orders created in the last hour with status '1'
     const result = await sequelize.query(
       'INSERT INTO paymentDone (user_id, amount,status) VALUES (?,?,?)',
-      { replacements: [userId, price,'0'], type: QueryTypes.INSERT }
+      { replacements: [userId, price,status], type: QueryTypes.INSERT }
     );
 
     res.status(200).json({ message: 'payment done!', error: false });
@@ -1609,10 +1609,20 @@ const createPayment = async (req, res) => {
 const fetchordersforadmin = async (req, res) => {
   try {
 
-    const productList = await sequelize.query('SELECT orders.*,register.name as NAME,register.oNumber as OPHONE FROM orders INNER JOIN register ON orders.user_id = register.id',
+    const productList = await sequelize.query('SELECT orders.*,register.name as NAME,register.oNumber as OPHONE FROM orders INNER JOIN register ON orders.user_id = register.id ORDER BY orders.created_at DESC',
       { replacements: [], type: QueryTypes.SELECT }); 
 
     if(productList.length > 0){
+
+      for (const order of productList) {
+        const cartItems = await sequelize.query('SELECT cart.*,product.p_name as PNAME,product.p_image as PIMAGE,product.p_price as PPRICE FROM cart INNER JOIN product ON cart.product_id = product.id WHERE cart.order_id = ?', 
+          { 
+            replacements: [order.id], 
+            type: QueryTypes.SELECT 
+          });
+
+          order.cartItems = cartItems;
+      }
       return res.status(200).send({ error: false, message: 'Data Fetch Successfully', Orders: productList });
     } else {
       return res.status(404).send({ error: true, message: 'Data not found', Orders: [] });
@@ -1918,6 +1928,45 @@ const fetchProductAdminById = async (req, res) => {
   }
 };
 
+const deliverOrder = async (req, res) => {
+  const { oId } = req.body;
+
+  try {
+    // Fetch orders created in the last hour with status '1'
+    const result = await sequelize.query(
+      'UPDATE orders SET status = ? WHERE id = ?',
+      { replacements: ['2', oId], type: QueryTypes.UPDATE }
+    );
+
+    res.status(200).json({ message: 'Order Deliver done!', error: false });
+
+  } catch (error) {
+    console.error('Error processing Update:', error);
+    res.status(500).json({ message: 'Internal server error', error: true });
+  }
+};
+
+const fetchAdminPayments = async (req, res) => {
+  try {
+
+    const productList = await sequelize.query('SELECT paymentdone.*,register.name as NAME,register.oNumber as ONUMBER,register.eNumber as ENUMBER FROM paymentdone INNER JOIN register ON paymentdone.user_id = register.id ORDER BY paymentdone.created_at DESC',
+      { replacements: [], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Data fetch Successfully', Payments: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', Payments: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
+
 module.exports = {
   login,
   loginUser,
@@ -1964,5 +2013,7 @@ module.exports = {
   fetchPaymentHistory,
   createPayment,
   fetchTotalAmount,
-  fetchorderdetails
+  fetchorderdetails,
+  deliverOrder,
+  fetchAdminPayments
 };

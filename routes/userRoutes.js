@@ -26,7 +26,7 @@ const {addsellSugarcane,
     fetchProductAdminById,
     fetchInventory,
     fetchDeisleCost,fetchsellSugarcaneAllData,addPayment,fetchOrder, updateProductCart,placeOrder,deleteProductCart,fetchCartItems,addProductCart,loginUser,register,login,addCategory,fetchCategory,fetchCategorybyId,updateCategory,deleteCategory,fetchActiveCategory,addProduct,fetchProduct,
-    fetchActiveProduct
+    fetchActiveProduct,deliverOrder,fetchAdminPayments
  } = userController; 
 
 router.post('/login', login);
@@ -74,5 +74,7 @@ router.post('/adddailyWages', adddailyWages);
 router.get('/fetchdailyWages', fetchdailyWages);
 router.post('/addDeisleCost', addDeisleCost);
 router.get('/fetchDeisleCost', fetchDeisleCost);
+router.post('/deliverOrder', deliverOrder);
+router.get('/fetchAdminPayments', fetchAdminPayments);
 
 module.exports = router;
