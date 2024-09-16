@@ -15,10 +15,15 @@ require('dotenv').config();
 // });
 
 
+// const DB_NAME = 'purecane';
+// const DB_USER = 'root';
+// const DB_PASSWORD = 'savan';
+// const DB_HOST = 'localhost';
+
 const DB_NAME = 'purecane';
 const DB_USER = 'root';
 const DB_PASSWORD = 'savan';
-const DB_HOST = 'localhost';
+const DB_HOST = '0.0.0.0';
 
 // Set up the Sequelize instance
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
