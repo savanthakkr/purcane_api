@@ -17,7 +17,7 @@ require('dotenv').config();
 
 // const DB_NAME = 'purecane';
 // const DB_USER = 'root';
-// const DB_PASSWORD = 'savan';
+// const DB_PASSWORD = '';
 // const DB_HOST = 'localhost';
 
 const DB_NAME = 'purecane';
