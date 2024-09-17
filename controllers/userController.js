@@ -1841,28 +1841,37 @@ const placeOrderByadmin = async (req, res) => {
 const fetchInventory = async (req, res) => {
   try {
     const productList = await sequelize.query(
-      'SELECT inventory.*,category.cat_name,product.p_name FROM inventory INNER JOIN category ON inventory.category_id = category.id INNER JOIN product ON inventory.product_id = product.id ORDER BY inventory.created_at DESC',
+      'SELECT inventory.*, category.cat_name, product.p_name FROM inventory INNER JOIN category ON inventory.category_id = category.id INNER JOIN product ON inventory.product_id = product.id ORDER BY inventory.created_at DESC',
       { replacements: [], type: QueryTypes.SELECT }
     );
 
     if (productList.length > 0) {
-      // Group the inventory items by date with custom keys
+      // Group the inventory items by date with custom keys and sum total_amount per date
       const inventoryByDate = productList.reduce((acc, item) => {
         const date = item.created_at.toISOString().split('T')[0]; // format date as YYYY-MM-DD
+        const totalAmount = parseInt(item.total_amount, 10) || 0; // Convert total_amount to an integer
         
         const existingDateGroup = acc.find(group => group.addDate === date);
 
         if (existingDateGroup) {
           existingDateGroup.inventory.push(item);
+          // Add the total_amount to the existing sum for this date
+          existingDateGroup.totalSum += totalAmount;
         } else {
           acc.push({
             addDate: date,
-            inventory: [item]
+            inventory: [item],
+            totalSum: totalAmount // Initialize total sum for this date
           });
         }
 
         return acc;
       }, []);
+
+      // Convert the totalSum back to string for each date group
+      inventoryByDate.forEach(group => {
+        group.totalSum = group.totalSum.toString();
+      });
 
       return res.status(200).send({ 
         error: false, 
@@ -1885,6 +1894,9 @@ const fetchInventory = async (req, res) => {
     });
   }
 };
+
+
+
 
 const createInventory = async (req, res) => {
   const { category_id, product_id,quantity,base_price,total_amount } = req.body;
