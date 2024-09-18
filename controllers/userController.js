@@ -1944,19 +1944,75 @@ const deliverOrder = async (req, res) => {
   const { oId } = req.body;
 
   try {
-    // Fetch orders created in the last hour with status '1'
-    const result = await sequelize.query(
+    // Get yesterday's date in YYYY-MM-DD format
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayDate = yesterday.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Step 1: Fetch the order details from the cart table based on the order id
+    const cartResult = await sequelize.query(
+      `SELECT cart.product_id, cart.quantity
+       FROM cart
+       WHERE cart.order_id = ?`,
+      { replacements: [oId], type: QueryTypes.SELECT }
+    );
+
+    if (cartResult.length === 0) {
+      return res.status(404).json({ message: 'Order not found in cart', error: true });
+    }
+
+    const { product_id, quantity: cartQuantity } = cartResult[0];
+
+    // Step 2: Check if the product is available in the inventory and the quantity is sufficient
+    const inventoryResult = await sequelize.query(
+      `SELECT inventory.quantity, inventory.created_at
+       FROM inventory
+       WHERE inventory.product_id = ? AND DATE(inventory.created_at) = ?`,
+      { replacements: [product_id, yesterdayDate], type: QueryTypes.SELECT }
+    );
+
+    if (inventoryResult.length === 0) {
+      return res.status(404).json({ message: 'Product not found in inventory for yesterday\'s date', error: true });
+    }
+
+    let availableInventory = inventoryResult[0].quantity;
+
+    // Step 3: Check if inventory quantity is sufficient, and update accordingly
+    if (availableInventory <= 0) {
+      return res.status(400).json({ message: 'No inventory available for this product', error: true });
+    }
+
+    // Step 4: Subtract the quantity from inventory but ensure no negative values
+    let newInventoryQuantity;
+    if (availableInventory < cartQuantity) {
+      newInventoryQuantity = 0; // Set inventory to 0 if it's less than the cart quantity
+    } else {
+      newInventoryQuantity = availableInventory - cartQuantity; // Otherwise, subtract normally
+    }
+
+    // Step 5: Update the inventory with the new quantity
+    await sequelize.query(
+      `UPDATE inventory
+       SET quantity = ?
+       WHERE product_id = ? AND DATE(created_at) = ?`,
+      { replacements: [newInventoryQuantity, product_id, yesterdayDate], type: QueryTypes.UPDATE }
+    );
+
+    // Step 6: Update the order status to 'delivered' (status = '2')
+    await sequelize.query(
       'UPDATE orders SET status = ? WHERE id = ?',
       { replacements: ['2', oId], type: QueryTypes.UPDATE }
     );
 
-    res.status(200).json({ message: 'Order Deliver done!', error: false });
+    res.status(200).json({ message: 'Order delivered and inventory updated!', error: false });
 
   } catch (error) {
     console.error('Error processing Update:', error);
     res.status(500).json({ message: 'Internal server error', error: true });
   }
 };
+
+
 
 const fetchAdminPayments = async (req, res) => {
   try {
