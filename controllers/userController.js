@@ -1917,6 +1917,58 @@ const createInventory = async (req, res) => {
 }; 
 
 
+const fetchExpences = async (req, res) => {
+  try {
+    const productList = await sequelize.query(
+      'SELECT * from otherExpenses order by created_at DESC',
+      { replacements: [], type: QueryTypes.SELECT }
+    );
+
+    if (productList.length > 0) {
+      // Group the inventory items by date with custom keys and sum total_amount per date
+      
+
+      return res.status(200).send({ 
+        error: false, 
+        message: 'Data Fetched Successfully', 
+        AllExpences: productList 
+      });
+    } else {
+      return res.status(404).send({ 
+        error: true, 
+        message: 'Data not found', 
+        AllExpences: [] 
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
+      error: true
+    });
+  }
+};
+
+const createExpences = async (req, res) => {
+  const { quantity,total_amount } = req.body;
+
+  try {
+    // Fetch orders created in the last hour with status '1'
+    const result = await sequelize.query(
+      'INSERT INTO otherExpenses (name,amount) VALUES (?,?)',
+      { replacements: [quantity,total_amount], type: QueryTypes.INSERT }
+    );
+
+    res.status(200).json({ message: 'Expenses added!', error: false });
+
+  } catch (error) {
+    console.error('Error processing payment:', error);
+    res.status(500).json({ message: 'Internal server error', error: true });
+  }
+}; 
+
+
 const fetchProductAdminById = async (req, res) => {
   try {
 
@@ -2058,6 +2110,7 @@ module.exports = {
   fetchActiveCategory,
   fetchInventory,
   addProduct,
+  fetchExpences,
   fetchProduct,
   fetchActiveProduct,
   fetchOrder,
@@ -2082,6 +2135,7 @@ module.exports = {
   createPayment,
   fetchTotalAmount,
   fetchorderdetails,
+  createExpences,
   deliverOrder,
   fetchAdminPayments
 };

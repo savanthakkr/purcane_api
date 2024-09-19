@@ -23,6 +23,8 @@ const {addsellSugarcane,
     addDeisleCost,
     placeOrderByadmin,
     createInventory,
+    fetchExpences,
+    createExpences,
     fetchProductAdminById,
     fetchInventory,
     fetchDeisleCost,fetchsellSugarcaneAllData,addPayment,fetchOrder, updateProductCart,placeOrder,deleteProductCart,fetchCartItems,addProductCart,loginUser,register,login,addCategory,fetchCategory,fetchCategorybyId,updateCategory,deleteCategory,fetchActiveCategory,addProduct,fetchProduct,
@@ -32,6 +34,7 @@ const {addsellSugarcane,
 router.post('/login', login);
 router.post('/fetchOrder', fetchOrder);
 router.post('/createInventory', createInventory);
+router.post('/createExpences', createExpences);
 router.post('/fetchProductAdminById', fetchProductAdminById);
 router.post('/placeOrderByadmin', placeOrderByadmin);
 router.post('/UpdateView', UpdateView);
@@ -39,6 +42,7 @@ router.post('/updateUserCart', updateUserCart);
 router.post('/fetchorderdetails', fetchorderdetails);
 router.get('/fetchsellSugarcaneAllData', fetchsellSugarcaneAllData);
 router.get('/fetchInventory', fetchInventory);
+router.get('/fetchExpences', fetchExpences);
 router.get('/fetchordersforadmin', fetchordersforadmin);
 router.get('/fetchAllUsers', fetchAllUsers);
 router.post('/addPayment', addPayment);
