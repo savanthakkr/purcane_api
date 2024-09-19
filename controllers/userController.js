@@ -1917,6 +1917,142 @@ const createInventory = async (req, res) => {
 }; 
 
 
+const fetchProductAdminById = async (req, res) => {
+  try {
+
+    const { cId } = req.body;
+
+    const productList = await sequelize.query('SELECT product.*,category.id as CID,category.cat_name as CNAME FROM product INNER JOIN category ON product.category_id = category.id WHERE product.category_id = ?',
+      { replacements: [cId], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Product Fetch Successfully', Product: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Product not found', Product: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
+
+const deliverOrder = async (req, res) => {
+  const { oId } = req.body;
+
+  try {
+    // Get yesterday's date in YYYY-MM-DD format
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayDate = yesterday.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Step 1: Fetch the order details from the cart table based on the order id
+    const cartResult = await sequelize.query(
+      `SELECT cart.product_id, cart.quantity
+       FROM cart
+       WHERE cart.order_id = ?`,
+      { replacements: [oId], type: QueryTypes.SELECT }
+    );
+
+    if (cartResult.length === 0) {
+      return res.status(404).json({ message: 'Order not found in cart', error: true });
+    }
+
+    const { product_id, quantity: cartQuantity } = cartResult[0];
+
+    // Step 2: Check if the product is available in the inventory and the quantity is sufficient
+    const inventoryResult = await sequelize.query(
+      `SELECT inventory.quantity,inventory.base_price, inventory.created_at
+       FROM inventory
+       WHERE inventory.product_id = ? AND DATE(inventory.created_at) = ?`,
+      { replacements: [product_id, yesterdayDate], type: QueryTypes.SELECT }
+    );
+
+    if (inventoryResult.length === 0) {
+      await sequelize.query(
+        'UPDATE orders SET status = ? WHERE id = ?',
+        { replacements: ['2', oId], type: QueryTypes.UPDATE }
+      );
+  
+      res.status(200).json({ message: 'Order delivered and inventory updated!', error: false });
+    } else {
+      let availableInventory = inventoryResult[0].quantity;
+      var totalPrice = 0;
+      if (availableInventory <= 0) {
+        await sequelize.query(
+          'UPDATE orders SET status = ? WHERE id = ?',
+          { replacements: ['2', oId], type: QueryTypes.UPDATE }
+        );
+    
+        res.status(200).json({ message: 'Order delivered and inventory updated!', error: false });
+      } else {
+        let newInventoryQuantity;
+        if (availableInventory < cartQuantity) {
+          newInventoryQuantity = 0;
+          totalPrice = 0; // Set inventory to 0 if it's less than the cart quantity
+        } else {
+          newInventoryQuantity = availableInventory - cartQuantity;
+          totalPrice = newInventoryQuantity * inventoryResult[0].base_price;
+        }
+    
+        // Step 5: Update the inventory with the new quantity
+        await sequelize.query(
+          `UPDATE inventory
+           SET quantity = ?,total_amount=?
+           WHERE product_id = ? AND DATE(created_at) = ?`,
+          { replacements: [newInventoryQuantity, totalPrice,product_id, yesterdayDate], type: QueryTypes.UPDATE }
+        );
+    
+        // Step 6: Update the order status to 'delivered' (status = '2')
+        await sequelize.query(
+          'UPDATE orders SET status = ?,created_at = ? WHERE id = ?',
+          { replacements: ['2', inventoryResult[0].created_at,oId], type: QueryTypes.UPDATE }
+        );
+    
+        res.status(200).json({ message: 'Order delivered and inventory updated!', error: false });
+    
+      }
+  
+    }
+
+    
+
+    // Step 3: Check if inventory quantity is sufficient, and update accordingly
+    
+    // Step 4: Subtract the quantity from inventory but ensure no negative values
+    
+  } catch (error) {
+    console.error('Error processing Update:', error);
+    res.status(500).json({ message: 'Internal server error', error: true });
+  }
+};
+
+
+
+const fetchAdminPayments = async (req, res) => {
+  try {
+
+    const productList = await sequelize.query('SELECT paymentdone.*,register.name as NAME,register.oNumber as ONUMBER,register.eNumber as ENUMBER FROM paymentdone INNER JOIN register ON paymentdone.user_id = register.id ORDER BY paymentdone.created_at DESC',
+      { replacements: [], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Data fetch Successfully', Payments: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', Payments: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
+
 const fetchExpences = async (req, res) => {
   try {
     const productList = await sequelize.query(
@@ -1968,124 +2104,115 @@ const createExpences = async (req, res) => {
   }
 }; 
 
-
-const fetchProductAdminById = async (req, res) => {
+const fetchAdminHomeData = async (req, res) => {
   try {
-
-    const { cId } = req.body;
-
-    const productList = await sequelize.query('SELECT product.*,category.id as CID,category.cat_name as CNAME FROM product INNER JOIN category ON product.category_id = category.id WHERE product.category_id = ?',
-      { replacements: [cId], type: QueryTypes.SELECT }); 
-
-    if(productList.length > 0){
-      return res.status(200).send({ error: false, message: 'Product Fetch Successfully', Product: productList });
-    } else {
-      return res.status(404).send({ error: true, message: 'Product not found', Product: [] });
-    }
-
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      message: 'Product not found',
-      error: true
-    });
-  }
-};
-
-const deliverOrder = async (req, res) => {
-  const { oId } = req.body;
-
-  try {
-    // Get yesterday's date in YYYY-MM-DD format
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayDate = yesterday.toISOString().split('T')[0]; // YYYY-MM-DD
-
-    // Step 1: Fetch the order details from the cart table based on the order id
-    const cartResult = await sequelize.query(
-      `SELECT cart.product_id, cart.quantity
-       FROM cart
-       WHERE cart.order_id = ?`,
-      { replacements: [oId], type: QueryTypes.SELECT }
+    const orderResult = await sequelize.query(
+      `SELECT SUM(orders.tPrice) as OAMOUNT, DATE(orders.created_at) as ODATE 
+      FROM orders 
+      WHERE orders.status = ? 
+      GROUP BY DATE(orders.created_at) 
+      ORDER BY ODATE DESC`,
+      { replacements: ['2'], type: QueryTypes.SELECT }
     );
 
-    if (cartResult.length === 0) {
-      return res.status(404).json({ message: 'Order not found in cart', error: true });
-    }
+    const purchaseCaneResult = await sequelize.query(
+      `SELECT SUM(sell_sugarcane.amount) as PURCHASEAMOUNT, DATE(sell_sugarcane.created_at) as PDATE 
+      FROM sell_sugarcane
+      GROUP BY DATE(sell_sugarcane.created_at) 
+      ORDER BY PDATE DESC`,
+      { replacements: [], type: QueryTypes.SELECT }
+    );
 
-    const { product_id, quantity: cartQuantity } = cartResult[0];
+    const dieselCostResult = await sequelize.query(
+      `SELECT SUM(diesel_cost.d_amount) as DIESELCOST, DATE(diesel_cost.created_at) as DCDATE 
+      FROM diesel_cost
+      GROUP BY DATE(diesel_cost.created_at) 
+      ORDER BY DCDATE DESC`,
+      { replacements: [], type: QueryTypes.SELECT }
+    );
 
-    // Step 2: Check if the product is available in the inventory and the quantity is sufficient
+    const wagesCostResult = await sequelize.query(
+      `SELECT SUM(dailey_wages.total_amount) as WAGESCOST, DATE(dailey_wages.created_at) as WCDATE 
+      FROM dailey_wages
+      GROUP BY DATE(dailey_wages.created_at) 
+      ORDER BY WCDATE DESC`,
+      { replacements: [], type: QueryTypes.SELECT }
+    );
+
+    const transportCostResult = await sequelize.query(
+      `SELECT SUM(transportcost_sell.amount) as TRANSPORTCOST, DATE(transportcost_sell.created_at) as TCDATE 
+      FROM transportcost_sell
+      GROUP BY DATE(transportcost_sell.created_at) 
+      ORDER BY TCDATE DESC`,
+      { replacements: [], type: QueryTypes.SELECT }
+    );
+
     const inventoryResult = await sequelize.query(
-      `SELECT inventory.quantity, inventory.created_at
-       FROM inventory
-       WHERE inventory.product_id = ? AND DATE(inventory.created_at) = ?`,
-      { replacements: [product_id, yesterdayDate], type: QueryTypes.SELECT }
+      `SELECT SUM(inventory.total_amount) as INVENTORTYAMOUNT, DATE(inventory.created_at) as IDATE 
+      FROM inventory
+      GROUP BY DATE(inventory.created_at) 
+      ORDER BY IDATE DESC`,
+      { replacements: [], type: QueryTypes.SELECT }
     );
 
-    if (inventoryResult.length === 0) {
-      return res.status(404).json({ message: 'Product not found in inventory for yesterday\'s date', error: true });
-    }
-
-    let availableInventory = inventoryResult[0].quantity;
-
-    // Step 3: Check if inventory quantity is sufficient, and update accordingly
-    if (availableInventory <= 0) {
-      return res.status(400).json({ message: 'No inventory available for this product', error: true });
-    }
-
-    // Step 4: Subtract the quantity from inventory but ensure no negative values
-    let newInventoryQuantity;
-    if (availableInventory < cartQuantity) {
-      newInventoryQuantity = 0; // Set inventory to 0 if it's less than the cart quantity
-    } else {
-      newInventoryQuantity = availableInventory - cartQuantity; // Otherwise, subtract normally
-    }
-
-    // Step 5: Update the inventory with the new quantity
-    await sequelize.query(
-      `UPDATE inventory
-       SET quantity = ?
-       WHERE product_id = ? AND DATE(created_at) = ?`,
-      { replacements: [newInventoryQuantity, product_id, yesterdayDate], type: QueryTypes.UPDATE }
+    const otherexpenseResult = await sequelize.query(
+      `SELECT SUM(otherexpenses.amount) as OTHEREXPENSEAMOUNT, DATE(otherexpenses.created_at) as OEDATE 
+      FROM otherexpenses
+      GROUP BY DATE(otherexpenses.created_at) 
+      ORDER BY OEDATE DESC`,
+      { replacements: [], type: QueryTypes.SELECT }
     );
 
-    // Step 6: Update the order status to 'delivered' (status = '2')
-    await sequelize.query(
-      'UPDATE orders SET status = ? WHERE id = ?',
-      { replacements: ['2', oId], type: QueryTypes.UPDATE }
-    );
+    // Collect all unique dates from each dataset
+    const allDates = new Set([
+      ...orderResult.map(item => item.ODATE),
+      ...purchaseCaneResult.map(item => item.PDATE),
+      ...dieselCostResult.map(item => item.DCDATE),
+      ...wagesCostResult.map(item => item.WCDATE),
+      ...transportCostResult.map(item => item.TCDATE),
+      ...inventoryResult.map(item => item.IDATE),
+      ...otherexpenseResult.map(item => item.OEDATE)
+    ]);
 
-    res.status(200).json({ message: 'Order delivered and inventory updated!', error: false });
+    // Create a single array merging all data
+    const mergedData = Array.from(allDates).map(date => {
+      const order = orderResult.find(item => item.ODATE === date) || { OAMOUNT: 0 };
+      const purchase = purchaseCaneResult.find(item => item.PDATE === date) || { PURCHASEAMOUNT: 0 };
+      const diesel = dieselCostResult.find(item => item.DCDATE === date) || { DIESELCOST: 0 };
+      const wages = wagesCostResult.find(item => item.WCDATE === date) || { WAGESCOST: 0 };
+      const transport = transportCostResult.find(item => item.TCDATE === date) || { TRANSPORTCOST: 0 };
+      const inventory = inventoryResult.find(item => item.IDATE === date) || { INVENTORTYAMOUNT: 0 };
+      const otherexpense = otherexpenseResult.find(item => item.OEDATE === date) || { OTHEREXPENSEAMOUNT: 0 };
 
-  } catch (error) {
-    console.error('Error processing Update:', error);
-    res.status(500).json({ message: 'Internal server error', error: true });
-  }
-};
+      return {
+        date,
+        OAMOUNT: order.OAMOUNT,
+        PURCHASEAMOUNT: purchase.PURCHASEAMOUNT,
+        DIESELCOST: diesel.DIESELCOST,
+        WAGESCOST: wages.WAGESCOST,
+        TRANSPORTCOST: transport.TRANSPORTCOST,
+        INVENTORTYAMOUNT: inventory.INVENTORTYAMOUNT,
+        OTHEREXPENSEAMOUNT: otherexpense.OTHEREXPENSEAMOUNT
+      };
+    });
 
-
-
-const fetchAdminPayments = async (req, res) => {
-  try {
-
-    const productList = await sequelize.query('SELECT paymentdone.*,register.name as NAME,register.oNumber as ONUMBER,register.eNumber as ENUMBER FROM paymentdone INNER JOIN register ON paymentdone.user_id = register.id ORDER BY paymentdone.created_at DESC',
-      { replacements: [], type: QueryTypes.SELECT }); 
-
-    if(productList.length > 0){
-      return res.status(200).send({ error: false, message: 'Data fetch Successfully', Payments: productList });
-    } else {
-      return res.status(404).send({ error: true, message: 'Data not found', Payments: [] });
-    }
+    // Send the merged data in the response
+    return res.status(200).send({
+      error: false,
+      message: 'Data fetched successfully',
+      overallData: mergedData
+    });
 
   } catch (error) {
     console.log(error);
     res.status(500).send({
-      message: 'Product not found',
-      error: true
+      message: 'Data not found',
+      error: true,
+      overallData: []
     });
   }
 };
+
 
 module.exports = {
   login,
@@ -2110,7 +2237,6 @@ module.exports = {
   fetchActiveCategory,
   fetchInventory,
   addProduct,
-  fetchExpences,
   fetchProduct,
   fetchActiveProduct,
   fetchOrder,
@@ -2135,7 +2261,9 @@ module.exports = {
   createPayment,
   fetchTotalAmount,
   fetchorderdetails,
-  createExpences,
   deliverOrder,
-  fetchAdminPayments
+  fetchAdminPayments,
+  fetchAdminHomeData,
+  createExpences,
+  fetchExpences
 };
