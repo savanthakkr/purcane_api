@@ -26,7 +26,8 @@ const {addsellSugarcane,
     fetchProductAdminById,
     fetchInventory,
     fetchDeisleCost,fetchsellSugarcaneAllData,addPayment,fetchOrder, updateProductCart,placeOrder,deleteProductCart,fetchCartItems,addProductCart,loginUser,register,login,addCategory,fetchCategory,fetchCategorybyId,updateCategory,deleteCategory,fetchActiveCategory,addProduct,fetchProduct,
-    fetchActiveProduct,deliverOrder,fetchAdminPayments,fetchAdminHomeData,createExpences,fetchExpences
+    fetchActiveProduct,deliverOrder,fetchAdminPayments,fetchAdminHomeData,createExpences,fetchExpences,fetchProfile,updateProfile,
+    fetchUserPaymentHistory
  } = userController; 
 
 router.post('/login', login);
@@ -79,5 +80,8 @@ router.get('/fetchAdminPayments', fetchAdminPayments);
 router.get('/fetchAdminHomeData', fetchAdminHomeData);
 router.post('/createExpences', createExpences);
 router.get('/fetchExpences', fetchExpences);
+router.post('/fetchProfile', fetchProfile);
+router.post('/updateProfile', updateProfile);
+router.post('/fetchUserPaymentHistory', fetchUserPaymentHistory);
 
 module.exports = router;

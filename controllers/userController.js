@@ -495,8 +495,6 @@ const register = async (req, res) => {
   }
 };
 
-
-
 const loginUser = async (req, res) => {
   try {
     const { oMobile,password } = req.body;
@@ -516,6 +514,62 @@ const loginUser = async (req, res) => {
       message: 'Error in login check api!',
       error
     });
+  }
+};
+
+const fetchProfile = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const [existingUser] = await sequelize.query('SELECT * FROM register WHERE id = ?',
+      { replacements: [userId], type: QueryTypes.SELECT });
+    if (existingUser) {
+      return res.status(200).send({ error: false, message: 'Login success!', Login: existingUser });
+    } else {
+      return res.status(404).send({ error: true, message: 'Email or Password is wrong!' });
+    }
+
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in login check api!',
+      error
+    });
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const {userId, name,nName,eMobile,landmark,sImage,block } = req.body;
+
+    var imagePath = "";
+
+      // Insert new jobseeker into the database
+      if(sImage){
+        imagePath = saveBase64File(sImage, 'uploads');
+      } else {
+        const existingCategory = await sequelize.query(
+          'SELECT * FROM register WHERE id = ?',
+          {
+            replacements: [userId],
+            type: QueryTypes.SELECT
+          }
+        );
+        imagePath = existingCategory[0].sImages;
+      }
+
+      const result = await sequelize.query(
+        'UPDATE register SET name = ?, nName = ?, eNumber = ?, landmark = ?, sImages = ?, block = ? Where id = ?',
+        {
+          replacements: [name,nName,eMobile,landmark,imagePath,block,userId],
+          type: QueryTypes.INSERT
+        }
+      );
+      res.status(200).json({ error: false, message: 'Profile update successfully' });
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'User not added!!!' });
   }
 };
 
@@ -670,7 +724,7 @@ const fetchOrder = async (req, res) => {
       LEFT JOIN product p ON c.product_id = p.id
       WHERE o.user_id = ? AND o.status = ?
       `,
-      { replacements: [user_id, "0"], type: QueryTypes.SELECT }
+      { replacements: [user_id, "2"], type: QueryTypes.SELECT }
     );
 
     if (ordersWithCartAndProducts.length > 0) {
@@ -1522,10 +1576,6 @@ const fetchPaymentHistory = async (req, res) => {
 };
 
 
-
-
-
-
 const fetchTotalAmount = async (req, res) => {
   const { userId } = req.body;
 
@@ -2213,6 +2263,39 @@ const fetchAdminHomeData = async (req, res) => {
   }
 };
 
+const fetchUserPaymentHistory = async (req, res) => {
+
+  const { userId } = req.body;
+
+  try {
+    const paymentHistoryList = await sequelize.query(
+      'SELECT * from paymentdone WHERE user_id = ? order by created_at DESC',
+      { replacements: [userId], type: QueryTypes.SELECT }
+    );
+
+    if (paymentHistoryList.length > 0) {
+      
+      return res.status(200).send({ 
+        error: false, 
+        message: 'Data Fetched Successfully', 
+        UserPaymentHistory: paymentHistoryList 
+      });
+    } else {
+      return res.status(404).send({ 
+        error: true, 
+        message: 'Data not found', 
+        UserPaymentHistory: [] 
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
+      error: true
+    });
+  }
+};
 
 module.exports = {
   login,
@@ -2265,5 +2348,8 @@ module.exports = {
   fetchAdminPayments,
   fetchAdminHomeData,
   createExpences,
-  fetchExpences
+  fetchExpences,
+  fetchProfile,
+  updateProfile,
+  fetchUserPaymentHistory
 };
