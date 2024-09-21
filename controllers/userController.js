@@ -807,6 +807,9 @@ const addProductCart = async (req, res) => {
   }
 };
 
+
+
+
 const updateProductCart = async (req, res) => {
   try {
     const { cart_id, quantity, price } = req.body;
@@ -834,9 +837,9 @@ const deleteProductCart = async (req, res) => {
       return res.status(400).json({ message: 'Cart ID is required', error: true });
     }
     const result = await sequelize.query(
-      'DELETE FROM cart WHERE id = ?',
+      'DELETE FROM cart WHERE id = ? AND status = ?',
       {
-        replacements: [cartId],
+        replacements: [cartId,'0'],
         type: QueryTypes.DELETE,
       }
     );
@@ -845,7 +848,7 @@ const deleteProductCart = async (req, res) => {
     console.error('Error deleting requirement:', error);
     res.status(500).json({ message: 'Internal server error', error: true });
   }
-};
+}; 
 
 
 const addsellSugarcane = async (req, res) => {
