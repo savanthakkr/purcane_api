@@ -2085,7 +2085,7 @@ const deliverOrder = async (req, res) => {
 const fetchAdminPayments = async (req, res) => {
   try {
 
-    const productList = await sequelize.query('SELECT paymentdone.*,register.name as NAME,register.oNumber as ONUMBER,register.eNumber as ENUMBER FROM paymentdone INNER JOIN register ON paymentdone.user_id = register.id ORDER BY paymentdone.created_at DESC',
+    const productList = await sequelize.query('SELECT paymentDone.*,register.name as NAME,register.oNumber as ONUMBER,register.eNumber as ENUMBER FROM paymentDone INNER JOIN register ON paymentDone.user_id = register.id ORDER BY paymentDone.created_at DESC',
       { replacements: [], type: QueryTypes.SELECT }); 
 
     if(productList.length > 0){
@@ -2269,7 +2269,7 @@ const fetchUserPaymentHistory = async (req, res) => {
 
   try {
     const paymentHistoryList = await sequelize.query(
-      'SELECT * from paymentdone WHERE user_id = ? order by created_at DESC',
+      'SELECT * from paymentDone WHERE user_id = ? order by created_at DESC',
       { replacements: [userId], type: QueryTypes.SELECT }
     );
 
