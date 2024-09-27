@@ -8,6 +8,7 @@ const {addsellSugarcane,
     addpurchaseSugarcane,
     fetchpurchaseSugarcane,
     addsellTransportcost,
+    fetchOrdersAndPaymentsForAdmin,
     fetchsellTransportCost,
     addpurchaseTransportCost,
     fetchpurchaseTransportCost,
@@ -43,6 +44,8 @@ router.get('/fetchInventory', fetchInventory);
 router.get('/fetchordersforadmin', fetchordersforadmin);
 router.get('/fetchAllUsers', fetchAllUsers);
 router.post('/addPayment', addPayment);
+
+router.get('/fetchOrdersAndPaymentsForAdmin/:user_id', fetchOrdersAndPaymentsForAdmin);
 router.post('/createPayment', createPayment);
 router.post('/fetchTotalAmount', fetchTotalAmount);
 router.post('/fetchPaymentHistory', fetchPaymentHistory);

@@ -57,22 +57,6 @@ const saveBase64File = (base64String, folderPath) => {
 
 
 
-const generateToken = (user) => {
-  const payload = {
-    email: user.email,
-    password: user.password,
-    id: user.id,
-  };
-  return jwt.sign(payload, 'crud', { expiresIn: '24h' });
-};
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'sponda.netclues@gmail.com',
-    pass: 'qzfm wlmf ukeq rvvb'
-  }
-});
 
 function AddMinutesToDate(date, minutes) {
   return new Date(date.getTime() + minutes * 60000);
@@ -119,28 +103,6 @@ const sendEmail = async (options) => {
 
   await transporter.sendMail(mailOptions);
 };
-
-const sendPasswordOTP = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const otp = generateOTPS();
-    console.log(otp);
-
-
-
-    // Send OTP via email
-    await sendEmail({
-      to: email,
-      subject: 'Your OTP',
-      message: `<p>Your OTP is: <strong>${otp}</strong></p>`,
-    });
-
-    res.status(200).json({ success: true, message: 'OTP sent successfully' });
-  } catch (error) {
-    console.error('Error sending OTP:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
-  }
-}
 
 //admin apis
 
@@ -1689,6 +1651,103 @@ const fetchordersforadmin = async (req, res) => {
     });
   }
 };
+const fetchAdminPayments = async (req, res) => {
+  try {
+
+    const productList = await sequelize.query('SELECT paymentDone.*,register.name as NAME,register.oNumber as ONUMBER,register.eNumber as ENUMBER FROM paymentDone INNER JOIN register ON paymentDone.user_id = register.id ORDER BY paymentDone.created_at DESC',
+      { replacements: [], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Data fetch Successfully', Payments: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', Payments: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
+
+const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
+  try {
+    const userId = req.params.user_id; // Get the user_id from params
+
+    // Fetch orders for the given user_id
+    const orderList = await sequelize.query(
+      'SELECT orders.*, register.name as NAME, register.oNumber as OPHONE FROM orders INNER JOIN register ON orders.user_id = register.id WHERE orders.user_id = ? ORDER BY orders.created_at DESC',
+      {
+        replacements: [userId],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    // If orders are found, fetch the corresponding cart items for each order
+    if (orderList.length > 0) {
+      for (const order of orderList) {
+        const cartItems = await sequelize.query(
+          'SELECT cart.*, product.p_name as PNAME, product.p_image as PIMAGE, product.p_price as PPRICE FROM cart INNER JOIN product ON cart.product_id = product.id WHERE cart.order_id = ?',
+          {
+            replacements: [order.id],
+            type: QueryTypes.SELECT
+          }
+        );
+        order.cartItems = cartItems;
+      }
+    }
+
+    // Fetch payments for the given user_id
+    const paymentList = await sequelize.query(
+      'SELECT paymentDone.*, register.name as NAME, register.oNumber as ONUMBER, register.eNumber as ENUMBER FROM paymentDone INNER JOIN register ON paymentDone.user_id = register.id WHERE paymentDone.user_id = ? ORDER BY paymentDone.created_at DESC',
+      {
+        replacements: [userId],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    // If neither orders nor payments are found, return 404
+    if (orderList.length === 0 && paymentList.length === 0) {
+      return res.status(404).send({
+        error: true,
+        message: 'Data not found for the given user',
+        Data: []
+      });
+    }
+
+    // Create a combined array of orders and payments, adding a "type" key
+    const combinedData = [];
+
+    // Add orders to the combined data array with type 'O'
+    orderList.forEach(order => {
+      combinedData.push({ ...order, type: 'O' });
+    });
+
+    // Add payments to the combined data array with type 'P'
+    paymentList.forEach(payment => {
+      combinedData.push({ ...payment, type: 'P' });
+    });
+
+    // Send the combined response
+    return res.status(200).send({
+      error: false,
+      message: 'Data fetched successfully',
+      Data: combinedData
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error fetching data',
+      error: true
+    });
+  }
+};
+
+
+
 
 const fetchorderdetails = async (req, res) => {
   try {
@@ -1790,42 +1849,6 @@ const fetchAllUsers = async (req, res) => {
 
 
 
-
-// const fetchorderdetails = async (req, res) => {
-//   try {
-
-//     const { oId } = req.params;
-
-//     const productList = await sequelize.query('SELECT orders.*,register.name as NAME,register.oNumber as OPHONE FROM orders INNER JOIN register ON orders.user_id = register.id WHERE orders.id = ?',
-//       { replacements: [oId], type: QueryTypes.SELECT }); 
-
-//     if(productList.length > 0){
-
-//       const cartItems = await sequelize.query('SELECT * FROM cart WHERE order_id = ?', 
-//       { 
-//         replacements: [oId], 
-//         type: QueryTypes.SELECT 
-//       });
-  
-//       // Combine order details with cart items
-//       const orderWithCartItems = {
-//         ...productList[0],  // Assuming there's only one order
-//         cartItems: cartItems // Array of cart items
-//       };
-
-//       return res.status(200).send({ error: false, message: 'Data Fetch Successfully', OrderDetails: orderWithCartItems });
-//     } else {
-//       return res.status(404).send({ error: true, message: 'Data not found', OrderDetails: [] });
-//     }
-
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       message: 'Data not found',
-//       error: true
-//     });
-//   }
-// };
 
 const UpdateView = async (req, res) => {
   const { userId ,sellPriceStatus } = req.body;
@@ -2085,26 +2108,7 @@ const deliverOrder = async (req, res) => {
 
 
 
-const fetchAdminPayments = async (req, res) => {
-  try {
 
-    const productList = await sequelize.query('SELECT paymentDone.*,register.name as NAME,register.oNumber as ONUMBER,register.eNumber as ENUMBER FROM paymentDone INNER JOIN register ON paymentDone.user_id = register.id ORDER BY paymentDone.created_at DESC',
-      { replacements: [], type: QueryTypes.SELECT }); 
-
-    if(productList.length > 0){
-      return res.status(200).send({ error: false, message: 'Data fetch Successfully', Payments: productList });
-    } else {
-      return res.status(404).send({ error: true, message: 'Data not found', Payments: [] });
-    }
-
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      message: 'Product not found',
-      error: true
-    });
-  }
-};
 
 const fetchExpences = async (req, res) => {
   try {
@@ -2354,5 +2358,6 @@ module.exports = {
   fetchExpences,
   fetchProfile,
   updateProfile,
+  fetchOrdersAndPaymentsForAdmin,
   fetchUserPaymentHistory
 };
