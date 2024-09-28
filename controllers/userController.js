@@ -629,7 +629,7 @@ const placeOrder = async (req, res) => {
 
 
 const addPayment = async (req, res) => {
-  const { userId, price } = req.body;
+  const { userId, price, notes } = req.body;
 
   try {
     // Fetch orders created in the last hour with status '1'
@@ -651,8 +651,8 @@ const addPayment = async (req, res) => {
     // Loop through the results and insert into paymentDone
     for (const order of UserOrderResult) {
       const result = await sequelize.query(
-        'INSERT INTO paymentDone (user_id, order_id, amount,status) VALUES (?, ?, ?,?)',
-        { replacements: [userId, order.id, price,'0'], type: QueryTypes.INSERT }
+        'INSERT INTO paymentDone (user_id, order_id, amount,notes, status) VALUES (?, ?, ?,?,?)',
+        { replacements: [userId, order.id, price,notes,'0'], type: QueryTypes.INSERT }
       );
       
 
