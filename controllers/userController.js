@@ -2304,6 +2304,394 @@ const fetchUserPaymentHistory = async (req, res) => {
   }
 };
 
+//btoc apis
+const btocregister = async (req, res) => {
+  try {
+    const { name,mobile, username,password } = req.body;
+
+    const existingMobile = await sequelize.query(
+      'SELECT * FROM btoc_users WHERE mobile = ?',
+      {
+        replacements: [mobile],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    const existingUsername = await sequelize.query(
+      'SELECT * FROM btoc_users WHERE username = ?',
+      {
+        replacements: [username],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (existingMobile.length === 0 && existingUsername.length === 0) {
+      
+      const result = await sequelize.query(
+        'INSERT INTO btoc_users (name,mobile, username,password) VALUES (?, ?, ?, ?)',
+        {
+          replacements: [name,mobile, username,password],
+          type: QueryTypes.INSERT
+        }
+      );
+
+      const userId = result[0];
+
+      // Generate and send OTP
+      // await sendOTP(mobileNumber);
+      res.status(200).json({ error: false, message: 'User registered successfully', userId: userId });
+    } else {
+      res.status(400).json({ error: true, message: 'User already exist!!!' });
+    }
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'User not added!!!' });
+  }
+};
+
+const loginbtocUser = async (req, res) => {
+  try {
+    const { username,password } = req.body;
+
+    const [existingUser] = await sequelize.query('SELECT * FROM btoc_users WHERE username = ? AND password = ? AND status = ?',
+      { replacements: [username,password,'0'], type: QueryTypes.SELECT });
+    if (existingUser) {
+      return res.status(200).send({ error: false, message: 'Login success!', Login: existingUser });
+    } else {
+      return res.status(404).send({ error: true, message: 'Username or Password is wrong!' });
+    }
+
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in login check api!',
+      error: true
+    });
+  }
+};
+
+const fetchbtocusers = async (req, res) => {
+  try {
+
+    const paymentHistoryList = await sequelize.query(
+      'SELECT * from btoc_users order by created_at DESC',
+      { replacements: [], type: QueryTypes.SELECT }
+    );
+
+    if (paymentHistoryList.length > 0) {
+      
+      return res.status(200).send({ 
+        error: false, 
+        message: 'Data Fetched Successfully', 
+        BtoCUsers: paymentHistoryList 
+      });
+    } else {
+      return res.status(404).send({ 
+        error: true, 
+        message: 'Data not found', 
+        BtoCUsers: [] 
+      });
+    }
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in login check api!',
+      error: true
+    });
+  }
+};
+
+const fetchbtocUserProfile = async (req, res) => {
+  try {
+    const { userid } = req.body;
+
+    const [existingUser] = await sequelize.query('SELECT * FROM btoc_users WHERE id = ?',
+      { replacements: [userid], type: QueryTypes.SELECT });
+    if (existingUser) {
+      return res.status(200).send({ error: false, message: 'Data Fetch', Login: existingUser });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found' });
+    }
+
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in login check api!',
+      error: true,
+    });
+  }
+};
+
+const createAttendance = async (req, res) => {
+  try {
+    const { userid,a_date, a_time,a_image,type } = req.body;
+
+    const existingDate = await sequelize.query(
+      'SELECT * FROM attendance WHERE a_date = ?',
+      {
+        replacements: [a_date],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    const existingType = await sequelize.query(
+      'SELECT * FROM attendance WHERE type = ?',
+      {
+        replacements: [type],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (existingDate.length === 0 || existingType.length === 0) {
+      const imagePath = saveBase64File(a_image, 'uploads');
+
+      const result = await sequelize.query(
+        'INSERT INTO attendance (userid,a_date, a_time,a_image,type) VALUES (?, ?, ?, ?,?)',
+        {
+          replacements: [userid,a_date, a_time,imagePath,type],
+          type: QueryTypes.INSERT
+        }
+      );
+      res.status(200).json({ error: false, message: 'Attendace added successfully' });
+    } else {
+      res.status(400).json({ error: true, message: 'Attendance already marked!!!' });
+    }
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Attendance not added!!!' });
+  }
+};
+
+const fetchattendancbyuser = async (req, res) => {
+  try {
+    const { userid} = req.body;
+
+    const paymentHistoryList = await sequelize.query(
+      'SELECT * from attendance WHERE userid = ? order by created_at DESC',
+      { replacements: [userid], type: QueryTypes.SELECT }
+    );
+
+    if (paymentHistoryList.length > 0) {
+      
+      return res.status(200).send({ 
+        error: false, 
+        message: 'Data Fetched Successfully', 
+        UserAttendance: paymentHistoryList 
+      });
+    } else {
+      return res.status(404).send({ 
+        error: true, 
+        message: 'Data not found', 
+        UserAttendance: [] 
+      });
+    }
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in login check api!',
+      error: true
+    });
+  }
+};
+
+const fetchattendancuserbyDate = async (req, res) => {
+  try {
+    const { userid,a_date} = req.body;
+
+    const paymentHistoryList = await sequelize.query(
+      'SELECT * from attendance WHERE userid = ? AND a_date = ? order by created_at DESC',
+      { replacements: [userid,a_date], type: QueryTypes.SELECT }
+    );
+
+    if (paymentHistoryList.length > 0) {
+      
+      return res.status(200).send({ 
+        error: false, 
+        message: 'Data Fetched Successfully', 
+        UserAttendance: paymentHistoryList 
+      });
+    } else {
+      return res.status(404).send({ 
+        error: true, 
+        message: 'Data not found', 
+        UserAttendance: [] 
+      });
+    }
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in login check api!',
+      error: true
+    });
+  }
+};
+
+const createLeaves = async (req, res) => {
+  try {
+    const { userid,l_date,type } = req.body;
+    const [day, month, year] = l_date.split('-');
+
+    const totalLeavesForMonth = await sequelize.query(
+      `SELECT COUNT(*) AS total FROM leaves 
+       WHERE MONTH(STR_TO_DATE(l_date, '%d-%m-%Y')) = ? 
+       AND YEAR(STR_TO_DATE(l_date, '%d-%m-%Y')) = ? 
+       AND type = ?`,
+      {
+        replacements: [month, year, type],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (totalLeavesForMonth[0].total < 2 && type == "Casual") {
+
+      const result = await sequelize.query(
+        'INSERT INTO leaves (userid,l_date,type) VALUES (?, ?, ?)',
+        {
+          replacements: [userid,l_date,type],
+          type: QueryTypes.INSERT
+        }
+      );
+      res.status(200).json({ error: false, message: 'Leave added successfully' });
+    } else if (totalLeavesForMonth[0].total < 1 && type == "Emergency") {
+      const result = await sequelize.query(
+        'INSERT INTO leaves (userid,l_date,type) VALUES (?, ?,?)',
+        {
+          replacements: [userid,l_date,type],
+          type: QueryTypes.INSERT
+        }
+      );
+      res.status(200).json({ error: false, message: 'Leave added successfully' });
+    } else {
+      res.status(400).json({ error: true, message: 'You have not any Leave remains!!!' });
+    }
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Leave not added!!!' });
+  }
+};
+
+const fetchleavebyuser = async (req, res) => {
+  try {
+    const { userid} = req.body;
+
+    const paymentHistoryList = await sequelize.query(
+      'SELECT * from leaves WHERE userid = ? order by created_at DESC',
+      { replacements: [userid], type: QueryTypes.SELECT }
+    );
+
+    if (paymentHistoryList.length > 0) {
+      
+      return res.status(200).send({ 
+        error: false, 
+        message: 'Data Fetched Successfully', 
+        UserLeave: paymentHistoryList 
+      });
+    } else {
+      return res.status(404).send({ 
+        error: true, 
+        message: 'Data not found', 
+        UserLeave: [] 
+      });
+    }
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in login check api!',
+      error: true
+    });
+  }
+};
+
+const fetchleaveuserbyDate = async (req, res) => {
+  try {
+    const { userid,l_date} = req.body;
+
+    const paymentHistoryList = await sequelize.query(
+      'SELECT * from leaves WHERE userid = ? AND l_date = ? order by created_at DESC',
+      { replacements: [userid,l_date], type: QueryTypes.SELECT }
+    );
+
+    if (paymentHistoryList.length > 0) {
+      
+      return res.status(200).send({ 
+        error: false, 
+        message: 'Data Fetched Successfully', 
+        UserLeave: paymentHistoryList 
+      });
+    } else {
+      return res.status(404).send({ 
+        error: true, 
+        message: 'Data not found', 
+        UserLeave: [] 
+      });
+    }
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in login check api!',
+      error: true
+    });
+  }
+};
+
+const createBtoCExpense = async (req, res) => {
+  try {
+    const { userid,reason,amount } = req.body;
+
+    const result = await sequelize.query(
+      'INSERT INTO btoc_expense (userid,reason,amount) VALUES (?, ?, ?)',
+      {
+        replacements: [userid,reason,amount],
+        type: QueryTypes.INSERT
+      }
+    );
+    res.status(200).json({ error: false, message: 'Expense added successfully' });
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Expense not added!!!' });
+  }
+};
+
+const fetchExpensebyuser = async (req, res) => {
+  try {
+    const { userid} = req.body;
+
+    const paymentHistoryList = await sequelize.query(
+      'SELECT * from btoc_expense WHERE userid = ? order by created_at DESC',
+      { replacements: [userid], type: QueryTypes.SELECT }
+    );
+
+    if (paymentHistoryList.length > 0) {
+      
+      return res.status(200).send({ 
+        error: false, 
+        message: 'Data Fetched Successfully', 
+        UserExpense: paymentHistoryList 
+      });
+    } else {
+      return res.status(404).send({ 
+        error: true, 
+        message: 'Data not found', 
+        UserExpense: [] 
+      });
+    }
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in login check api!',
+      error: true
+    });
+  }
+};
+
 module.exports = {
   login,
   loginUser,
@@ -2359,5 +2747,17 @@ module.exports = {
   fetchProfile,
   updateProfile,
   fetchOrdersAndPaymentsForAdmin,
-  fetchUserPaymentHistory
+  fetchUserPaymentHistory,
+  btocregister,
+  loginbtocUser,
+  fetchbtocusers,
+  fetchbtocUserProfile,
+  createAttendance,
+  fetchattendancbyuser,
+  fetchattendancuserbyDate,
+  createLeaves,
+  fetchleavebyuser,
+  fetchleaveuserbyDate,
+  createBtoCExpense,
+  fetchExpensebyuser
 };

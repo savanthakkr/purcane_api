@@ -28,7 +28,8 @@ const {addsellSugarcane,
     fetchInventory,
     fetchDeisleCost,fetchsellSugarcaneAllData,addPayment,fetchOrder, updateProductCart,placeOrder,deleteProductCart,fetchCartItems,addProductCart,loginUser,register,login,addCategory,fetchCategory,fetchCategorybyId,updateCategory,deleteCategory,fetchActiveCategory,addProduct,fetchProduct,
     fetchActiveProduct,deliverOrder,fetchAdminPayments,fetchAdminHomeData,createExpences,fetchExpences,fetchProfile,updateProfile,
-    fetchUserPaymentHistory
+    fetchUserPaymentHistory,btocregister,loginbtocUser,fetchbtocusers,fetchbtocUserProfile,createAttendance,fetchattendancbyuser,
+    fetchattendancuserbyDate,createLeaves,fetchleavebyuser,fetchleaveuserbyDate,createBtoCExpense,fetchExpensebyuser
  } = userController; 
 
 router.post('/login', login);
@@ -86,5 +87,19 @@ router.get('/fetchExpences', fetchExpences);
 router.post('/fetchProfile', fetchProfile);
 router.post('/updateProfile', updateProfile);
 router.post('/fetchUserPaymentHistory', fetchUserPaymentHistory);
+
+//btoc
+router.post('/btocregister', btocregister);
+router.post('/loginbtocUser', loginbtocUser);
+router.get('/fetchbtocusers', fetchbtocusers);
+router.post('/fetchbtocUserProfile', fetchbtocUserProfile);
+router.post('/createAttendance', createAttendance);
+router.post('/fetchattendancbyuser', fetchattendancbyuser);
+router.post('/fetchattendancuserbyDate', fetchattendancuserbyDate);
+router.post('/createLeaves', createLeaves);
+router.post('/fetchleavebyuser', fetchleavebyuser);
+router.post('/fetchleaveuserbyDate', fetchleaveuserbyDate);
+router.post('/createBtoCExpense', createBtoCExpense);
+router.post('/fetchExpensebyuser', fetchExpensebyuser);
 
 module.exports = router;
