@@ -9,9 +9,9 @@ require('dotenv').config();
 // const DB_HOST = 'localhost';
 
 const DB_NAME = 'purecane';
-const DB_USER = 'root';
+const DB_USER = 'savan';
 const DB_PASSWORD = 'savan';
-const DB_HOST = '103.175.163.161';
+const DB_HOST = '127.0.0.1';
 
 // Set up the Sequelize instance
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
