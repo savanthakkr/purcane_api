@@ -28,8 +28,10 @@ const {addsellSugarcane,
     fetchInventory,
     fetchDeisleCost,fetchsellSugarcaneAllData,addPayment,fetchOrder, updateProductCart,placeOrder,deleteProductCart,fetchCartItems,addProductCart,loginUser,register,login,addCategory,fetchCategory,fetchCategorybyId,updateCategory,deleteCategory,fetchActiveCategory,addProduct,fetchProduct,
     fetchActiveProduct,deliverOrder,fetchAdminPayments,fetchAdminHomeData,createExpences,fetchExpences,fetchProfile,updateProfile,
-    fetchUserPaymentHistory,btocregister,loginbtocUser,fetchbtocusers,fetchbtocUserProfile,createAttendance,fetchattendancbyuser,
-    fetchattendancuserbyDate,createLeaves,fetchleavebyuser,fetchleaveuserbyDate,createBtoCExpense,fetchExpensebyuser
+    fetchUserPaymentHistory,shopregister,updateShop,fetchShops,assignUsertoShop,fetchShopdetails,createAttendance,fetchattendancbyuser,
+    fetchattendancuserbyDate,createLeaves,fetchleavebyuser,fetchleaveuserbyDate,createBtoCExpense,fetchExpensebyuser,addShopProduct,
+    updateShopProduct,fetchAllShopProduct,assignProducttoShop,updateassignProducttoShop,fetchAllAssignShopProduct,employeelogin,
+    fetchEmpDetails,fetchAllAssignUser
  } = userController; 
 
 router.post('/login', login);
@@ -89,10 +91,11 @@ router.post('/updateProfile', updateProfile);
 router.post('/fetchUserPaymentHistory', fetchUserPaymentHistory);
 
 //btoc
-router.post('/btocregister', btocregister);
-router.post('/loginbtocUser', loginbtocUser);
-router.get('/fetchbtocusers', fetchbtocusers);
-router.post('/fetchbtocUserProfile', fetchbtocUserProfile);
+router.post('/shopregister', shopregister);
+router.post('/updateShop', updateShop);
+router.get('/fetchShops', fetchShops);
+router.post('/assignUsertoShop', assignUsertoShop);
+router.post('/fetchShopdetails', fetchShopdetails);
 router.post('/createAttendance', createAttendance);
 router.post('/fetchattendancbyuser', fetchattendancbyuser);
 router.post('/fetchattendancuserbyDate', fetchattendancuserbyDate);
@@ -101,5 +104,14 @@ router.post('/fetchleavebyuser', fetchleavebyuser);
 router.post('/fetchleaveuserbyDate', fetchleaveuserbyDate);
 router.post('/createBtoCExpense', createBtoCExpense);
 router.post('/fetchExpensebyuser', fetchExpensebyuser);
+router.post('/addShopProduct', addShopProduct);
+router.post('/updateShopProduct', updateShopProduct);
+router.get('/fetchAllShopProduct', fetchAllShopProduct);
+router.post('/assignProducttoShop', assignProducttoShop);
+router.post('/updateassignProducttoShop', updateassignProducttoShop);
+router.post('/fetchAllAssignShopProduct', fetchAllAssignShopProduct);
+router.post('/employeelogin', employeelogin);
+router.post('/fetchEmpDetails', fetchEmpDetails);
+router.post('/fetchAllAssignUser', fetchAllAssignUser);
 
 module.exports = router;

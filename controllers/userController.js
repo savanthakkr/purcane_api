@@ -128,6 +128,33 @@ const login = async (req, res) => {
   }
 };
 
+const employeelogin = async (req, res) => {
+  try {
+    const { oMobile,password } = req.body;
+
+    const [existingUser] = await sequelize.query('SELECT * FROM register WHERE oNumber = ? AND password = ? AND status = ?',
+      { replacements: [oMobile,password,'0'], type: QueryTypes.SELECT });
+    if (existingUser) {
+      if(existingUser.shop_id != null){
+        return res.status(200).send({ error: false, message: 'Login success!', Login: existingUser });
+      } else {
+        return res.status(404).send({ error: true, message: 'You have not assign at any shop' });
+      }
+      
+    } else {
+      return res.status(404).send({ error: true, message: 'Email or Password is wrong!' });
+    }
+
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in login check api!',
+      error
+    });
+  }
+};
+
 const addCategory = async (req, res) => {
   try {
     const { cname,cImage } = req.body;
@@ -352,8 +379,6 @@ const fetchProductAdmin = async (req, res) => {
 const fetchProduct = async (req, res) => {
   try {
     const { userId } = req.body;
-
-    log
 
     // Query to fetch product details and price logic
     const productList = await sequelize.query(`
@@ -2305,22 +2330,22 @@ const fetchUserPaymentHistory = async (req, res) => {
 };
 
 //btoc apis
-const btocregister = async (req, res) => {
+const shopregister = async (req, res) => {
   try {
-    const { name,mobile, username,password } = req.body;
+    const { shop_name,owner_name, owner_mobile,gst_no,address } = req.body;
 
     const existingMobile = await sequelize.query(
-      'SELECT * FROM btoc_users WHERE mobile = ?',
+      'SELECT * FROM shops WHERE owner_mobile = ?',
       {
-        replacements: [mobile],
+        replacements: [owner_mobile],
         type: QueryTypes.SELECT
       }
     );
 
     const existingUsername = await sequelize.query(
-      'SELECT * FROM btoc_users WHERE username = ?',
+      'SELECT * FROM shops WHERE gst_no = ?',
       {
-        replacements: [username],
+        replacements: [gst_no],
         type: QueryTypes.SELECT
       }
     );
@@ -2328,9 +2353,9 @@ const btocregister = async (req, res) => {
     if (existingMobile.length === 0 && existingUsername.length === 0) {
       
       const result = await sequelize.query(
-        'INSERT INTO btoc_users (name,mobile, username,password) VALUES (?, ?, ?, ?)',
+        'INSERT INTO shops (shop_name,owner_name, owner_mobile,gst_no,address) VALUES (?, ?, ?, ?,?)',
         {
-          replacements: [name,mobile, username,password],
+          replacements: [shop_name,owner_name, owner_mobile,gst_no,address],
           type: QueryTypes.INSERT
         }
       );
@@ -2339,43 +2364,60 @@ const btocregister = async (req, res) => {
 
       // Generate and send OTP
       // await sendOTP(mobileNumber);
-      res.status(200).json({ error: false, message: 'User registered successfully', userId: userId });
+      res.status(200).json({ error: false, message: 'Shop registered successfully', userId: userId });
     } else {
-      res.status(400).json({ error: true, message: 'User already exist!!!' });
+      res.status(400).json({ error: true, message: 'Shop Owner mobile or GST number already exist!!!' });
     }
   } catch (error) {
     console.error('Error registering user:', error); // Log the error
-    res.status(500).json({ error: true,message: 'User not added!!!' });
+    res.status(500).json({ error: true,message: 'Shop not added!!!' });
   }
 };
 
-const loginbtocUser = async (req, res) => {
+const updateShop = async (req, res) => {
   try {
-    const { username,password } = req.body;
+    const { shop_id,shop_name,owner_name, owner_mobile,gst_no,address } = req.body;
 
-    const [existingUser] = await sequelize.query('SELECT * FROM btoc_users WHERE username = ? AND password = ? AND status = ?',
-      { replacements: [username,password,'0'], type: QueryTypes.SELECT });
-    if (existingUser) {
-      return res.status(200).send({ error: false, message: 'Login success!', Login: existingUser });
+    const existingMobile = await sequelize.query(
+      'SELECT * FROM shops WHERE owner_mobile = ? AND id != ?',
+      {
+        replacements: [owner_mobile,shop_id],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    const existingUsername = await sequelize.query(
+      'SELECT * FROM shops WHERE gst_no = ? AND id != ?',
+      {
+        replacements: [gst_no,shop_id],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (existingMobile.length === 0 && existingUsername.length === 0) {
+      
+      const result = await sequelize.query(
+        'UPDATE shops SET shop_name = ?,owner_name = ?, owner_mobile = ?,gst_no = ?,address = ? WHERE id = ?',
+        {
+          replacements: [shop_name,owner_name, owner_mobile,gst_no,address,shop_id],
+          type: QueryTypes.UPDATE
+        }
+      );
+      res.status(200).json({ error: false, message: 'Shop updated successfully'});
     } else {
-      return res.status(404).send({ error: true, message: 'Username or Password is wrong!' });
+      res.status(400).json({ error: true, message: 'Shop Owner mobile or GST number already exist!!!' });
     }
-
-    
   } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      message: 'Error in login check api!',
-      error: true
-    });
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Shop not updated!!!' });
   }
 };
 
-const fetchbtocusers = async (req, res) => {
+const fetchShops = async (req, res) => {
   try {
 
     const paymentHistoryList = await sequelize.query(
-      'SELECT * from btoc_users order by created_at DESC',
+      'SELECT * from shops order by created_at DESC',
       { replacements: [], type: QueryTypes.SELECT }
     );
 
@@ -2384,13 +2426,13 @@ const fetchbtocusers = async (req, res) => {
       return res.status(200).send({ 
         error: false, 
         message: 'Data Fetched Successfully', 
-        BtoCUsers: paymentHistoryList 
+        AllShops: paymentHistoryList 
       });
     } else {
       return res.status(404).send({ 
         error: true, 
         message: 'Data not found', 
-        BtoCUsers: [] 
+        AllShops: [] 
       });
     }
     
@@ -2403,14 +2445,14 @@ const fetchbtocusers = async (req, res) => {
   }
 };
 
-const fetchbtocUserProfile = async (req, res) => {
+const fetchShopdetails = async (req, res) => {
   try {
-    const { userid } = req.body;
+    const { shopid } = req.body;
 
-    const [existingUser] = await sequelize.query('SELECT * FROM btoc_users WHERE id = ?',
-      { replacements: [userid], type: QueryTypes.SELECT });
+    const [existingUser] = await sequelize.query('SELECT * FROM shops WHERE id = ?',
+      { replacements: [shopid], type: QueryTypes.SELECT });
     if (existingUser) {
-      return res.status(200).send({ error: false, message: 'Data Fetch', Login: existingUser });
+      return res.status(200).send({ error: false, message: 'Data Fetch', ShopDetails: existingUser });
     } else {
       return res.status(404).send({ error: true, message: 'Data not found' });
     }
@@ -2429,23 +2471,26 @@ const createAttendance = async (req, res) => {
   try {
     const { userid,a_date, a_time,a_image,type } = req.body;
 
-    const existingDate = await sequelize.query(
-      'SELECT * FROM attendance WHERE a_date = ?',
-      {
-        replacements: [a_date],
-        type: QueryTypes.SELECT
-      }
-    );
+    // const existingDate = await sequelize.query(
+    //   'SELECT * FROM attendance WHERE a_date = ?',
+    //   {
+    //     replacements: [a_date],
+    //     type: QueryTypes.SELECT
+    //   }
+    // );
 
     const existingType = await sequelize.query(
-      'SELECT * FROM attendance WHERE type = ?',
+      'SELECT * FROM attendance WHERE a_date = ? AND type = ?',
       {
-        replacements: [type],
+        replacements: [a_date,type],
         type: QueryTypes.SELECT
       }
     );
 
-    if (existingDate.length === 0 || existingType.length === 0) {
+    // console.log(existingDate.length);
+    console.log(existingType.length);
+
+    if (existingType.length === 0) {
       const imagePath = saveBase64File(a_image, 'uploads');
 
       const result = await sequelize.query(
@@ -2540,9 +2585,9 @@ const createLeaves = async (req, res) => {
       `SELECT COUNT(*) AS total FROM leaves 
        WHERE MONTH(STR_TO_DATE(l_date, '%d-%m-%Y')) = ? 
        AND YEAR(STR_TO_DATE(l_date, '%d-%m-%Y')) = ? 
-       AND type = ?`,
+       AND type = ? AND userid = ?`,
       {
-        replacements: [month, year, type],
+        replacements: [month, year, type,userid],
         type: QueryTypes.SELECT
       }
     );
@@ -2611,10 +2656,20 @@ const fetchleavebyuser = async (req, res) => {
 const fetchleaveuserbyDate = async (req, res) => {
   try {
     const { userid,l_date} = req.body;
-
+    const [day, month, year] = l_date.split('-');
+    // const totalLeavesForMonth = await sequelize.query(
+    //   `SELECT COUNT(*) AS total FROM leaves 
+    //    WHERE MONTH(STR_TO_DATE(l_date, '%d-%m-%Y')) = ? 
+    //    AND YEAR(STR_TO_DATE(l_date, '%d-%m-%Y')) = ? 
+    //    AND type = ?`,
+    //   {
+    //     replacements: [month, year, type],
+    //     type: QueryTypes.SELECT
+    //   }
+    // );
     const paymentHistoryList = await sequelize.query(
-      'SELECT * from leaves WHERE userid = ? AND l_date = ? order by created_at DESC',
-      { replacements: [userid,l_date], type: QueryTypes.SELECT }
+      "SELECT * from leaves WHERE userid = ? AND MONTH(STR_TO_DATE(l_date, '%d-%m-%Y')) = ? AND YEAR(STR_TO_DATE(l_date, '%d-%m-%Y')) = ? order by created_at DESC",
+      { replacements: [userid,month,year], type: QueryTypes.SELECT }
     );
 
     if (paymentHistoryList.length > 0) {
@@ -2635,7 +2690,7 @@ const fetchleaveuserbyDate = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send({
-      message: 'Error in login check api!',
+      message: 'Data not found',
       error: true
     });
   }
@@ -2687,6 +2742,247 @@ const fetchExpensebyuser = async (req, res) => {
     console.log(error);
     res.status(500).send({
       message: 'Error in login check api!',
+      error: true
+    });
+  }
+};
+
+const addShopProduct = async (req, res) => {
+  try {
+    const { p_name,p_image,p_desc } = req.body;
+
+    const existingProduct = await sequelize.query(
+      'SELECT * FROM shop_product WHERE LOWER(p_name) = LOWER(?)',
+      {
+        replacements: [p_name],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (existingProduct.length === 0) {
+      const imagePath = saveBase64File(p_image, 'uploads');
+
+      // Insert new jobseeker into the database
+      const result = await sequelize.query(
+        'INSERT INTO shop_product (p_name,p_image,p_desc) VALUES (?,?,?)',
+        {
+          replacements: [p_name,imagePath,p_desc],
+          type: QueryTypes.INSERT
+        }
+      );
+
+      res.status(200).json({ error: false, message: 'Product added successfully!!!'});
+    } else {
+      res.status(400).json({ error: true, message: 'Product already exist!!!' });
+    }
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Product not added!!!' });
+  }
+};
+
+const updateShopProduct = async (req, res) => {
+  try {
+    const { pid,p_name,p_image,p_desc } = req.body;
+
+    const existingCategory = await sequelize.query(
+      'SELECT * FROM shop_product WHERE id != ? AND LOWER(p_name) = LOWER(?)',
+      {
+        replacements: [pid,p_name],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (existingCategory.length === 0) {
+
+      const categoryDetails = await sequelize.query(
+        'SELECT * FROM shop_product WHERE id = ?',
+        {
+          replacements: [pid],
+          type: QueryTypes.SELECT
+        }
+      );
+
+      var imagePath = "";
+
+      if(p_image != ""){
+        imagePath = saveBase64File(p_image, 'uploads');
+      } else {
+        imagePath = categoryDetails[0].p_image;
+      }
+      
+
+      // Insert new jobseeker into the database
+      const result = await sequelize.query(
+        'UPDATE shop_product SET p_name = ?, p_image  = ?, p_desc = ? WHERE id = ?',
+        {
+          replacements: [p_name,imagePath,p_desc,pid],
+          type: QueryTypes.UPDATE
+        }
+      );
+
+      res.status(200).json({ error: false, message: 'Product update successfully!!!'});
+    } else {
+      res.status(400).json({ error: true, message: 'Product already exist!!!' });
+    }
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Product not updated!!!' });
+  }
+};
+
+const assignUsertoShop = async (req, res) => {
+  try {
+    const { shop_id,user_id} = req.body;
+
+    const result = await sequelize.query(
+      'UPDATE register SET shop_id = ? WHERE id = ?',
+      {
+        replacements: [shop_id,user_id],
+        type: QueryTypes.UPDATE
+      }
+    );
+
+    res.status(200).json({ error: false, message: 'User assign successfully!!!'});
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'User not assign!!!' });
+  }
+};
+
+const fetchAllAssignUser = async (req, res) => {
+  try {
+    const { shop_id} = req.body;
+    const productList = await sequelize.query('SELECT * FROM register WHERE shop_id = ? ORDER BY id DESC',
+      { replacements: [shop_id], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'User Fetch Successfully', Users: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'User not found', Users: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'User not found',
+      error: true
+    });
+  }
+};
+
+const fetchAllShopProduct = async (req, res) => {
+  try {
+
+    const productList = await sequelize.query('SELECT * FROM shop_product ORDER BY id DESC',
+      { replacements: [], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Product Fetch Successfully', ShopProduct: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Product not found', ShopProduct: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
+
+const assignProducttoShop = async (req, res) => {
+  try {
+    const { p_id,s_id,quantity,amount } = req.body;
+
+    const existingProduct = await sequelize.query(
+      'SELECT * FROM assign_shop_product WHERE p_id = ? AND s_id = ?',
+      {
+        replacements: [p_id,s_id],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (existingProduct.length === 0) {
+      const result = await sequelize.query(
+        'INSERT INTO assign_shop_product (p_id,s_id,quantity,amount) VALUES (?,?,?,?)',
+        {
+          replacements: [p_id,s_id,quantity,amount],
+          type: QueryTypes.INSERT
+        }
+      );
+
+      res.status(200).json({ error: false, message: 'Product assigned successfully!!!'});
+    } else {
+      res.status(400).json({ error: true, message: 'Product already assigned to this shop!!!' });
+    }
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Product not assigned!!!' });
+  }
+};
+
+const updateassignProducttoShop = async (req, res) => {
+  try {
+    const { assign_id,quantity,amount } = req.body;
+
+    const result = await sequelize.query(
+      'UPDATE assign_shop_product SET quantity = ?, amount = ?  WHERE id = ?',
+      {
+        replacements: [quantity,amount,assign_id],
+        type: QueryTypes.UPDATE
+      }
+    );
+
+    res.status(200).json({ error: false, message: 'Update successfully!!!'});
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Product not Updated!!!' });
+  }
+};
+
+const fetchAllAssignShopProduct = async (req, res) => {
+  try {
+
+    const { shop_id } = req.body;
+
+    const productList = await sequelize.query('SELECT assign_shop_product.*,shop_product.p_name as PNAME,shop_product.p_image as PIMAGE,shop_product.p_desc as PDESC FROM assign_shop_product INNER JOIN shop_product ON assign_shop_product.p_id =  shop_product.id WHERE assign_shop_product.s_id = ? ORDER BY assign_shop_product.id DESC',
+      { replacements: [shop_id], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Product Fetch Successfully', AllShopProduct: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Product not found', AllShopProduct: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
+
+const fetchEmpDetails = async (req, res) => {
+  try {
+
+    const { user_id } = req.body;
+
+    const productList = await sequelize.query('SELECT register.*,shops.shop_name as SNAME,shops.owner_name as SMOBILE,shops.owner_mobile as SOWNER,shops.address as SADD FROM register INNER JOIN shops ON register.shop_id =  shops.id WHERE register.id = ?',
+      { replacements: [user_id], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', UserDetails: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', UserDetails: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
       error: true
     });
   }
@@ -2748,10 +3044,11 @@ module.exports = {
   updateProfile,
   fetchOrdersAndPaymentsForAdmin,
   fetchUserPaymentHistory,
-  btocregister,
-  loginbtocUser,
-  fetchbtocusers,
-  fetchbtocUserProfile,
+  shopregister,
+  updateShop,
+  fetchShops,
+  assignUsertoShop,
+  fetchShopdetails,
   createAttendance,
   fetchattendancbyuser,
   fetchattendancuserbyDate,
@@ -2759,5 +3056,14 @@ module.exports = {
   fetchleavebyuser,
   fetchleaveuserbyDate,
   createBtoCExpense,
-  fetchExpensebyuser
+  fetchExpensebyuser,
+  addShopProduct,
+  updateShopProduct,
+  fetchAllShopProduct,
+  assignProducttoShop,
+  updateassignProducttoShop,
+  fetchAllAssignShopProduct,
+  employeelogin,
+  fetchEmpDetails,
+  fetchAllAssignUser
 };
