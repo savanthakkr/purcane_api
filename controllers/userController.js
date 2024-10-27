@@ -2988,6 +2988,77 @@ const fetchEmpDetails = async (req, res) => {
   }
 };
 
+const addclosingquantity = async (req, res) => {
+  try {
+
+    const {assign_id,shop_id,remainquantity,qunatity,closing_date } = req.body;
+
+    const existingClosing = await sequelize.query(
+      'SELECT * FROM daily_close_shop_quantity WHERE ass_id = ? AND close_date = ?',
+      {
+        replacements: [assign_id,closing_date],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (existingClosing.length === 0) {
+      const result = await sequelize.query(
+        'UPDATE assign_shop_product SET quantity = ? WHERE id = ?',
+        {
+          replacements: [remainquantity,assign_id],
+          type: QueryTypes.UPDATE
+        }
+      );
+  
+      const resultInsert = await sequelize.query(
+        'INSERT INTO daily_close_shop_quantity (ass_id,shop_id,close_quantity,close_date) VALUES (?,?,?,?)',
+        {
+          replacements: [assign_id,shop_id,qunatity,closing_date],
+          type: QueryTypes.INSERT
+        }
+      );
+  
+      return res.status(200).send({ error: false, message: 'Quantity Update Successfully'});
+    } else {
+      return res.status(400).send({ error: false, message: 'Today Quantity already updated'});
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not updated',
+      error: true
+    });
+  }
+};
+
+const fetchClosingQunatity = async (req, res) => {
+  try {
+
+    const { shop_id,close_date } = req.body;
+
+    const existingClosing = await sequelize.query(
+      'SELECT daily_close_shop_quantity.*,assign_shop_product.quantity as RQUNT,assign_shop_product.amount as AMT,shop_product.p_name as SPNAME FROM daily_close_shop_quantity INNER JOIN assign_shop_product ON daily_close_shop_quantity.ass_id = assign_shop_product.id INNER JOIN shop_product ON assign_shop_product.s_id = shop_product.id WHERE daily_close_shop_quantity.shop_id = ? AND daily_close_shop_quantity.close_date = ?',
+      {
+        replacements: [shop_id,close_date],
+        type: QueryTypes.SELECT
+      }
+    ); 
+
+    if(existingClosing.length > 0){
+      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', DailyClosing: existingClosing });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', DailyClosing: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
+      error: true
+    });
+  }
+};
+
 module.exports = {
   login,
   loginUser,
@@ -3065,5 +3136,7 @@ module.exports = {
   fetchAllAssignShopProduct,
   employeelogin,
   fetchEmpDetails,
-  fetchAllAssignUser
+  fetchAllAssignUser,
+  addclosingquantity,
+  fetchClosingQunatity
 };
