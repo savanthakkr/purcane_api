@@ -10,6 +10,7 @@ const {addsellSugarcane,
     addsellTransportcost,
     fetchOrdersAndPaymentsForAdmin,
     fetchsellTransportCost,
+    addopenquantity,
     addpurchaseTransportCost,
     fetchpurchaseTransportCost,
     adddailyWages,
@@ -53,6 +54,7 @@ router.post('/createPayment', createPayment);
 router.post('/fetchTotalAmount', fetchTotalAmount);
 router.post('/fetchPaymentHistory', fetchPaymentHistory);
 router.post('/loginUser', loginUser);
+router.post('/addopenquantity', addopenquantity);
 router.post('/register', register);
 router.post('/placeOrder', placeOrder);
 router.post('/fetchCartItems', fetchCartItems);

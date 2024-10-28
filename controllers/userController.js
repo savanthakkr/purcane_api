@@ -3031,6 +3031,49 @@ const addclosingquantity = async (req, res) => {
   }
 };
 
+const addopenquantity = async (req, res) => {
+  try {
+
+    const {assign_id,shop_id,remainquantity,qunatity,closing_date } = req.body;
+
+    const existingClosing = await sequelize.query(
+      'SELECT * FROM dayli_open_shop_quantity WHERE ass_id = ? AND open_date = ?',
+      {
+        replacements: [assign_id,closing_date],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (existingClosing.length === 0) {
+      const result = await sequelize.query(
+        'UPDATE assign_shop_product SET quantity = ? WHERE id = ?',
+        {
+          replacements: [remainquantity,assign_id],
+          type: QueryTypes.UPDATE
+        }
+      );
+  
+      const resultInsert = await sequelize.query(
+        'INSERT INTO dayli_open_shop_quantity (ass_id,shop_id,open_quantity,open_date) VALUES (?,?,?,?)',
+        {
+          replacements: [assign_id,shop_id,qunatity,closing_date],
+          type: QueryTypes.INSERT
+        }
+      );
+  
+      return res.status(200).send({ error: false, message: 'Quantity Update Successfully'});
+    } else {
+      return res.status(400).send({ error: false, message: 'Today Quantity already updated'});
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not updated',
+      error: true
+    });
+  }
+};
+
 const fetchClosingQunatity = async (req, res) => {
   try {
 
@@ -3093,6 +3136,7 @@ module.exports = {
   addPayment,
   addpurchaseSugarcane,
   fetchpurchaseSugarcane,
+  addopenquantity,
   addsellTransportcost,
   fetchsellTransportCost,
   addpurchaseTransportCost,
