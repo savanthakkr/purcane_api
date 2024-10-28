@@ -3132,6 +3132,7 @@ module.exports = {
   updateShopProduct,
   fetchAllShopProduct,
   assignProducttoShop,
+  updateassignProducttoShop,
   fetchAllAssignShopProduct,
   employeelogin,
   fetchEmpDetails,
