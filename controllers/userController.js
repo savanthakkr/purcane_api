@@ -2906,9 +2906,9 @@ const assignProducttoShop = async (req, res) => {
 
     if (existingProduct.length === 0) {
       const result = await sequelize.query(
-        'INSERT INTO assign_shop_product (p_id,s_id,quantity,amount) VALUES (?,?,?,?)',
+        'INSERT INTO assign_shop_product (p_id,s_id,quantity,amount,product_quantity) VALUES (?,?,?,?,?)',
         {
-          replacements: [p_id,s_id,quantity,amount],
+          replacements: [p_id,s_id,quantity,amount,quantity],
           type: QueryTypes.INSERT
         }
       );
@@ -3132,7 +3132,6 @@ module.exports = {
   updateShopProduct,
   fetchAllShopProduct,
   assignProducttoShop,
-  updateassignProducttoShop,
   fetchAllAssignShopProduct,
   employeelogin,
   fetchEmpDetails,
