@@ -1428,6 +1428,16 @@ const AddRevenue = async (req, res) => {
   try {
     const { shopId,Online,Offline,closing_date } = req.body;
 
+    const existingClosing = await sequelize.query(
+      'SELECT * FROM revenue WHERE shop_name = ? AND date = ?',
+      {
+        replacements: [shopId,closing_date],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (existingClosing.length === 0) {
+
       const result = await sequelize.query(
         'INSERT INTO revenue (shop_name,online,offline,date) VALUES (?,?,?,?)',
         {
@@ -1437,6 +1447,9 @@ const AddRevenue = async (req, res) => {
       );
 
       res.status(200).json({ error: false, message: 'Added successfully!!!'});
+    }else{
+      res.status(200).json({ error: v, message: 'Added Unsuccessfully!!!'});
+    }
   } catch (error) {
     console.error('Error registering user:', error); // Log the error
     res.status(500).json({ error: true,message: 'Data not added!!!' });
