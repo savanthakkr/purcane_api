@@ -2471,7 +2471,7 @@ const fetchAllRevenueDetails = async (req, res) => {
     const revenueDetails = await sequelize.query(`
       SELECT revenue.*, shops.shop_name, shops.owner_mobile
       FROM revenue
-      JOIN shops ON revenue.shop_name_id = shops.id
+      JOIN shops ON revenue.shop_name = shops.id
     `, {
       type: QueryTypes.SELECT
     });
