@@ -3067,7 +3067,7 @@ const addclosingquantity = async (req, res) => {
   
       return res.status(200).send({ error: false, message: 'Quantity Update Successfully'});
     } else {
-      return res.status(400).send({ error: false, message: 'Today Quantity already updated'});
+      return res.status(400).send({ error: true, message: 'Today Quantity already updated'});
     }
   } catch (error) {
     console.log(error);
@@ -3091,7 +3091,7 @@ const addopenquantity = async (req, res) => {
       }
     );
 
-    if (req.body.length === 0) {
+    if (existingClosing.length === 0) {
       const result = await sequelize.query(
         'UPDATE assign_shop_product SET quantity = ? WHERE id = ?',
         {
@@ -3110,7 +3110,7 @@ const addopenquantity = async (req, res) => {
   
       return res.status(200).send({ error: false, message: 'Quantity Update Successfully'});
     } else {
-      return res.status(400).send({ error: false, message: 'Today Quantity already updated'});
+      return res.status(400).send({ error: true, message: 'Today Quantity already updated'});
     }
   } catch (error) {
     console.log(error);
