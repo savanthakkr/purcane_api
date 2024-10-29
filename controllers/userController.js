@@ -2158,7 +2158,7 @@ const deliverOrder = async (req, res) => {
 const fetchExpences = async (req, res) => {
   try {
     const productList = await sequelize.query(
-      'SELECT * from otherExpenses order by created_at DESC',
+      'SELECT * from otherexpenses order by created_at DESC',
       { replacements: [], type: QueryTypes.SELECT }
     );
 
@@ -2194,7 +2194,7 @@ const createExpences = async (req, res) => {
   try {
     // Fetch orders created in the last hour with status '1'
     const result = await sequelize.query(
-      'INSERT INTO otherExpenses (name,amount) VALUES (?,?)',
+      'INSERT INTO otherexpenses (name,amount) VALUES (?,?)',
       { replacements: [quantity,total_amount], type: QueryTypes.INSERT }
     );
 
