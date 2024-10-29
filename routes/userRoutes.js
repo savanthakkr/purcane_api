@@ -21,10 +21,12 @@ const {addsellSugarcane,
     fetchorderdetails,
     fetchordersforadmin,
     UpdateView,
+    fetchAllRevenueDetails,
     fetchTotalAmount,createPayment,fetchPaymentHistory,
     addDeisleCost,
     placeOrderByadmin,
     createInventory,
+    AddRevenue,
     fetchProductAdminById,
     fetchInventory,
     fetchDeisleCost,fetchsellSugarcaneAllData,addPayment,fetchOrder, updateProductCart,placeOrder,deleteProductCart,fetchCartItems,addProductCart,loginUser,register,login,addCategory,fetchCategory,fetchCategorybyId,updateCategory,deleteCategory,fetchActiveCategory,addProduct,fetchProduct,
@@ -36,6 +38,8 @@ const {addsellSugarcane,
  } = userController; 
 
 router.post('/login', login);
+
+router.post('/AddRevenue', AddRevenue);
 router.post('/fetchOrder', fetchOrder);
 router.post('/createInventory', createInventory);
 router.post('/fetchProductAdminById', fetchProductAdminById);
@@ -45,6 +49,7 @@ router.post('/updateUserCart', updateUserCart);
 router.post('/fetchorderdetails', fetchorderdetails);
 router.get('/fetchsellSugarcaneAllData', fetchsellSugarcaneAllData);
 router.get('/fetchInventory', fetchInventory);
+router.get('/fetchAllRevenueDetails', fetchAllRevenueDetails);
 router.get('/fetchordersforadmin', fetchordersforadmin);
 router.get('/fetchAllUsers', fetchAllUsers);
 router.post('/addPayment', addPayment);

@@ -1423,6 +1423,26 @@ const adddailyWages = async (req, res) => {
   }
 };
 
+
+const AddRevenue = async (req, res) => {
+  try {
+    const { shopId,Online,Offline,closing_date } = req.body;
+
+      const result = await sequelize.query(
+        'INSERT INTO revenue (shop_name,online,offline,date) VALUES (?,?,?,?)',
+        {
+          replacements: [shopId,Online,Offline,closing_date],
+          type: QueryTypes.INSERT
+        }
+      );
+
+      res.status(200).json({ error: false, message: 'Added successfully!!!'});
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Data not added!!!' });
+  }
+};
+
 const fetchdailyWages = async (req, res) => {
   try {
 
@@ -2445,6 +2465,33 @@ const fetchShops = async (req, res) => {
   }
 };
 
+const fetchAllRevenueDetails = async (req, res) => {
+  try {
+    // Query to fetch all data from revenue table and join with shops table
+    const revenueDetails = await sequelize.query(`
+      SELECT revenue.*, shops.shop_name, shops.owner_mobile
+      FROM revenue
+      JOIN shops ON revenue.shop_name_id = shops.id
+    `, {
+      type: QueryTypes.SELECT
+    });
+
+    if (revenueDetails.length > 0) {
+      return res.status(200).send({ error: false, message: 'Data Fetched', RevenueDetails: revenueDetails });
+    } else {
+      return res.status(404).send({ error: true, message: 'No data found' });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Error in fetching all revenue details!',
+      error: true,
+    });
+  }
+};
+
+
 const fetchShopdetails = async (req, res) => {
   try {
     const { shopid } = req.body;
@@ -3044,7 +3091,7 @@ const addopenquantity = async (req, res) => {
       }
     );
 
-    if (existingClosing.length === 0) {
+    if (req.body.length === 0) {
       const result = await sequelize.query(
         'UPDATE assign_shop_product SET quantity = ? WHERE id = ?',
         {
@@ -3143,6 +3190,7 @@ module.exports = {
   fetchpurchaseTransportCost,
   adddailyWages,
   fetchdailyWages,
+  AddRevenue,
   addDeisleCost,
   fetchDeisleCost,
   fetchsellSugarcaneAllData,
@@ -3164,6 +3212,7 @@ module.exports = {
   fetchShops,
   assignUsertoShop,
   fetchShopdetails,
+  fetchAllRevenueDetails,
   createAttendance,
   fetchattendancbyuser,
   fetchattendancuserbyDate,
