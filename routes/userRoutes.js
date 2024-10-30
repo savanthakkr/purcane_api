@@ -34,7 +34,7 @@ const {addsellSugarcane,
     fetchUserPaymentHistory,shopregister,updateShop,fetchShops,assignUsertoShop,fetchShopdetails,createAttendance,fetchattendancbyuser,
     fetchattendancuserbyDate,createLeaves,fetchleavebyuser,fetchleaveuserbyDate,createBtoCExpense,fetchExpensebyuser,addShopProduct,
     updateShopProduct,fetchAllShopProduct,assignProducttoShop,updateassignProducttoShop,fetchAllAssignShopProduct,employeelogin,
-    fetchEmpDetails,fetchAllAssignUser,addclosingquantity,fetchClosingQunatity
+    fetchEmpDetails,fetchAllAssignUser,addclosingquantity,fetchClosingQunatity,UpdateRevenue,fetchbtocpurchase,fetchbtocsell
  } = userController; 
 
 router.post('/login', login);
@@ -122,5 +122,8 @@ router.post('/fetchEmpDetails', fetchEmpDetails);
 router.post('/fetchAllAssignUser', fetchAllAssignUser);
 router.post('/addclosingquantity', addclosingquantity);
 router.post('/fetchClosingQunatity', fetchClosingQunatity);
+router.post('/UpdateRevenue', UpdateRevenue);
+router.post('/fetchbtocpurchase', fetchbtocpurchase);
+router.post('/fetchbtocsell', fetchbtocsell);
 
 module.exports = router;

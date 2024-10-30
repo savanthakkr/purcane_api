@@ -1456,6 +1456,25 @@ const AddRevenue = async (req, res) => {
   }
 };
 
+const UpdateRevenue = async (req, res) => {
+  try {
+    const { revenueId,Online,Offline } = req.body;
+
+    const result = await sequelize.query(
+      'UPDATE revenue SET online = ?,offline = ? WHERE id = ?',
+      {
+        replacements: [Online,Offline,revenueId],
+        type: QueryTypes.UPDATE
+      }
+    );
+
+    res.status(200).json({ error: false, message: 'Update successfully!!!'});
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Data not updated!!!' });
+  }
+};
+
 const fetchdailyWages = async (req, res) => {
   try {
 
@@ -2365,7 +2384,7 @@ const fetchUserPaymentHistory = async (req, res) => {
 //btoc apis
 const shopregister = async (req, res) => {
   try {
-    const { shop_name,owner_name, owner_mobile,gst_no,address } = req.body;
+    const { shop_name,owner_name, owner_mobile,gst_no,address,salary,rent } = req.body;
 
     const existingMobile = await sequelize.query(
       'SELECT * FROM shops WHERE owner_mobile = ?',
@@ -2386,9 +2405,9 @@ const shopregister = async (req, res) => {
     if (existingMobile.length === 0 && existingUsername.length === 0) {
       
       const result = await sequelize.query(
-        'INSERT INTO shops (shop_name,owner_name, owner_mobile,gst_no,address) VALUES (?, ?, ?, ?,?)',
+        'INSERT INTO shops (shop_name,owner_name, owner_mobile,gst_no,address,salary,rent) VALUES (?, ?, ?, ?,?,?,?)',
         {
-          replacements: [shop_name,owner_name, owner_mobile,gst_no,address],
+          replacements: [shop_name,owner_name, owner_mobile,gst_no,address,salary,rent],
           type: QueryTypes.INSERT
         }
       );
@@ -2973,6 +2992,21 @@ const assignProducttoShop = async (req, res) => {
         }
       );
 
+      const assignId = result[0];
+      const date = new Date();
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+      const year = date.getFullYear();
+
+      const formattedDate = `${day}-${month}-${year}`;
+      const resultadd = await sequelize.query(
+        'INSERT INTO dayli_open_shop_quantity (ass_id,shop_id,open_quantity,amount,open_date) VALUES (?,?,?,?,?)',
+        {
+          replacements: [assignId,s_id,quantity,amount,formattedDate],
+          type: QueryTypes.INSERT
+        }
+      );
+
       res.status(200).json({ error: false, message: 'Product assigned successfully!!!'});
     } else {
       res.status(400).json({ error: true, message: 'Product already assigned to this shop!!!' });
@@ -3005,12 +3039,39 @@ const updateassignProducttoShop = async (req, res) => {
 const fetchAllAssignShopProduct = async (req, res) => {
   try {
 
-    const { shop_id } = req.body;
+    const { shop_id,currunt_date } = req.body;
 
     const productList = await sequelize.query('SELECT assign_shop_product.*,shop_product.p_name as PNAME,shop_product.p_image as PIMAGE,shop_product.p_desc as PDESC FROM assign_shop_product INNER JOIN shop_product ON assign_shop_product.p_id =  shop_product.id WHERE assign_shop_product.s_id = ? ORDER BY assign_shop_product.id DESC',
       { replacements: [shop_id], type: QueryTypes.SELECT }); 
 
     if(productList.length > 0){
+      for (let product of productList) {
+        const assignId = product.id;
+
+        const openQuantityData = await sequelize.query(
+          `SELECT open_quantity,amount 
+           FROM dayli_open_shop_quantity 
+           WHERE ass_id = ? AND open_date = ?`,
+          { replacements: [assignId, currunt_date], type: QueryTypes.SELECT }
+        );
+
+        // Add the open quantity data to each product entry
+        const todayquntity = openQuantityData.length > 0 ? openQuantityData[0].open_quantity : 0;
+        const todayamount = openQuantityData.length > 0 ? openQuantityData[0].amount : 0;
+
+        const todayPurchase = todayquntity * todayamount;
+        product.todaypurchase = todayPurchase;
+
+        // Fetch the overall count for this product if needed
+        const overallCountData = await sequelize.query(
+          `SELECT SUM(open_quantity * amount) AS overall_purchase 
+           FROM dayli_open_shop_quantity 
+           WHERE ass_id = ?`,
+          { replacements: [assignId], type: QueryTypes.SELECT }
+        );
+
+        product.overall_purchase = overallCountData.length > 0 ? overallCountData[0].overall_purchase : 0;
+      }
       return res.status(200).send({ error: false, message: 'Product Fetch Successfully', AllShopProduct: productList });
     } else {
       return res.status(404).send({ error: true, message: 'Product not found', AllShopProduct: [] });
@@ -3020,6 +3081,52 @@ const fetchAllAssignShopProduct = async (req, res) => {
     console.log(error);
     res.status(500).send({
       message: 'Product not found',
+      error: true
+    });
+  }
+};
+
+const fetchbtocpurchase = async (req, res) => {
+  try {
+
+    const { ass_id} = req.body;
+
+    const productList = await sequelize.query('SELECT * FROM dayli_open_shop_quantity WHERE ass_id = ? ORDER BY id DESC',
+      { replacements: [ass_id], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', PurchaseData: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', PurchaseData: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
+      error: true
+    });
+  }
+};
+
+const fetchbtocsell = async (req, res) => {
+  try {
+
+    const { ass_id} = req.body;
+
+    const productList = await sequelize.query('SELECT * FROM daily_close_shop_quantity WHERE ass_id = ? ORDER BY id DESC',
+      { replacements: [ass_id], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', SellData: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', SellData: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
       error: true
     });
   }
@@ -3094,7 +3201,7 @@ const addclosingquantity = async (req, res) => {
 const addopenquantity = async (req, res) => {
   try {
 
-    const {assign_id,shop_id,remainquantity,qunatity,closing_date } = req.body;
+    const {assign_id,shop_id,remainquantity,qunatity,closing_date,amount } = req.body;
 
     const existingClosing = await sequelize.query(
       'SELECT * FROM dayli_open_shop_quantity WHERE ass_id = ? AND open_date = ?',
@@ -3114,9 +3221,9 @@ const addopenquantity = async (req, res) => {
       );
   
       const resultInsert = await sequelize.query(
-        'INSERT INTO dayli_open_shop_quantity (ass_id,shop_id,open_quantity,open_date) VALUES (?,?,?,?)',
+        'INSERT INTO dayli_open_shop_quantity (ass_id,shop_id,open_quantity,amount,open_date) VALUES (?,?,?,?,?)',
         {
-          replacements: [assign_id,shop_id,qunatity,closing_date],
+          replacements: [assign_id,shop_id,qunatity,amount,closing_date],
           type: QueryTypes.INSERT
         }
       );
@@ -3244,5 +3351,8 @@ module.exports = {
   fetchEmpDetails,
   fetchAllAssignUser,
   addclosingquantity,
-  fetchClosingQunatity
+  fetchClosingQunatity,
+  UpdateRevenue,
+  fetchbtocpurchase,
+  fetchbtocsell
 };
