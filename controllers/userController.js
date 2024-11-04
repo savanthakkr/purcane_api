@@ -3243,31 +3243,74 @@ const addopenquantity = async (req, res) => {
 
 const fetchClosingQunatity = async (req, res) => {
   try {
+    const { shop_id, close_date } = req.body;
 
-    const { shop_id,close_date } = req.body;
+    // Log the incoming request body to ensure it contains the expected fields
+    console.log("Request Body:", req.body);
 
-    const existingClosing = await sequelize.query(
-      'SELECT daily_close_shop_quantity.*,assign_shop_product.quantity as RQUNT,assign_shop_product.amount as AMT,shop_product.p_name as SPNAME FROM daily_close_shop_quantity INNER JOIN assign_shop_product ON daily_close_shop_quantity.ass_id = assign_shop_product.id INNER JOIN shop_product ON assign_shop_product.s_id = shop_product.id WHERE daily_close_shop_quantity.shop_id = ? AND daily_close_shop_quantity.close_date = ?',
-      {
-        replacements: [shop_id,close_date],
-        type: QueryTypes.SELECT
-      }
-    ); 
-
-    if(existingClosing.length > 0){
-      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', DailyClosing: existingClosing });
-    } else {
-      return res.status(404).send({ error: true, message: 'Data not found', DailyClosing: [] });
+    // Ensure shop_id and close_date are provided
+    if (!shop_id || !close_date) {
+      return res.status(400).send({
+        error: true,
+        message: 'shop_id and close_date are required fields.',
+      });
     }
 
+    // Run the SQL query
+    const existingClosing = await sequelize.query(
+      `SELECT 
+        daily_close_shop_quantity.*, 
+        assign_shop_product.quantity AS RQUNT, 
+        assign_shop_product.amount AS AMT, 
+        shop_product.p_name AS SPNAME 
+       FROM 
+        daily_close_shop_quantity 
+       INNER JOIN 
+        assign_shop_product 
+       ON 
+        daily_close_shop_quantity.ass_id = assign_shop_product.id 
+       INNER JOIN 
+        shop_product 
+       ON 
+        assign_shop_product.s_id = shop_product.id 
+       WHERE 
+        daily_close_shop_quantity.shop_id = ? 
+       AND 
+        daily_close_shop_quantity.close_date = ?`,
+      {
+        replacements: [shop_id, close_date],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    // Log the query results
+    console.log("Query Result:", existingClosing);
+
+    // Check if data was found and send the appropriate response
+    if (existingClosing.length > 0) {
+      return res.status(200).send({
+        error: false,
+        message: 'Data fetched successfully',
+        DailyClosing: existingClosing,
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: 'Data not found',
+        DailyClosing: [],
+      });
+    }
   } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      message: 'Data not found',
-      error: true
+    // Log any error that occurs
+    console.error("Database Query Error:", error);
+    return res.status(500).send({
+      error: true,
+      message: 'An error occurred while fetching data',
+      details: error.message,
     });
   }
 };
+
 
 module.exports = {
   login,
