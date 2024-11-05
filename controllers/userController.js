@@ -676,7 +676,7 @@ const addPayment = async (req, res) => {
     // Loop through the results and insert into paymentDone
     for (const order of UserOrderResult) {
       const result = await sequelize.query(
-        'INSERT INTO paymentDone (user_id, order_id, amount,notes, status) VALUES (?, ?, ?,?,?)',
+        'INSERT INTO paymentdone (user_id, order_id, amount,notes, status) VALUES (?, ?, ?,?,?)',
         { replacements: [userId, order.id, price,notes,'0'], type: QueryTypes.INSERT }
       );
       
@@ -1578,7 +1578,7 @@ const fetchPaymentHistory = async (req, res) => {
         id AS OID, 
         amount AS AMOUNT, 
         DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS cDateTime
-      FROM paymentDone 
+      FROM paymentdone 
       WHERE user_id = ?
       ORDER BY created_at DESC
     `, { 
@@ -1633,7 +1633,7 @@ const fetchTotalAmount = async (req, res) => {
     );
 
     const paymentDoneResult = await sequelize.query(
-      `SELECT SUM(amount) as PDAMT FROM paymentDone 
+      `SELECT SUM(amount) as PDAMT FROM paymentdone 
        WHERE user_id = ? 
        AND status = ?`,
       {
@@ -1643,7 +1643,7 @@ const fetchTotalAmount = async (req, res) => {
     );
 
     const paymentPendingResult = await sequelize.query(
-      `SELECT SUM(amount) as PPAMT FROM paymentDone 
+      `SELECT SUM(amount) as PPAMT FROM paymentdone 
        WHERE user_id = ? 
        AND status = ?`,
       {
@@ -1685,7 +1685,7 @@ const createPayment = async (req, res) => {
   try {
     // Fetch orders created in the last hour with status '1'
     const result = await sequelize.query(
-      'INSERT INTO paymentDone (user_id, amount,status) VALUES (?,?,?)',
+      'INSERT INTO paymentdone (user_id, amount,status) VALUES (?,?,?)',
       { replacements: [userId, price,status], type: QueryTypes.INSERT }
     );
 
@@ -1731,7 +1731,7 @@ const fetchordersforadmin = async (req, res) => {
 const fetchAdminPayments = async (req, res) => {
   try {
 
-    const productList = await sequelize.query('SELECT paymentDone.*,register.name as NAME,register.oNumber as ONUMBER,register.eNumber as ENUMBER FROM paymentDone INNER JOIN register ON paymentDone.user_id = register.id ORDER BY paymentDone.created_at DESC',
+    const productList = await sequelize.query('SELECT paymentdone.*,register.name as NAME,register.oNumber as ONUMBER,register.eNumber as ENUMBER FROM paymentdone INNER JOIN register ON paymentdone.user_id = register.id ORDER BY paymentdone.created_at DESC',
       { replacements: [], type: QueryTypes.SELECT }); 
 
     if(productList.length > 0){
@@ -1778,7 +1778,7 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
 
     // Fetch payments for the given user_id
     const paymentList = await sequelize.query(
-      'SELECT paymentDone.*, register.name as NAME, register.oNumber as ONUMBER, register.eNumber as ENUMBER FROM paymentDone INNER JOIN register ON paymentDone.user_id = register.id WHERE paymentDone.user_id = ? ORDER BY paymentDone.created_at DESC',
+      'SELECT paymentDone.*, register.name as NAME, register.oNumber as ONUMBER, register.eNumber as ENUMBER FROM paymentdone INNER JOIN register ON paymentdone.user_id = register.id WHERE paymentdone.user_id = ? ORDER BY paymentdone.created_at DESC',
       {
         replacements: [userId],
         type: QueryTypes.SELECT
@@ -2353,7 +2353,7 @@ const fetchUserPaymentHistory = async (req, res) => {
 
   try {
     const paymentHistoryList = await sequelize.query(
-      'SELECT * from paymentDone WHERE user_id = ? order by created_at DESC',
+      'SELECT * from paymentdone WHERE user_id = ? order by created_at DESC',
       { replacements: [userId], type: QueryTypes.SELECT }
     );
 
