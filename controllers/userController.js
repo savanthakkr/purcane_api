@@ -1758,13 +1758,13 @@ const fetchTotalAmount = async (req, res) => {
 };
 
 const createPayment = async (req, res) => {
-  const { userId, price,status } = req.body;
+  const { userId, price } = req.body;
 
   try {
     // Fetch orders created in the last hour with status '1'
     const result = await sequelize.query(
       'INSERT INTO paymentdone (user_id, amount,status) VALUES (?,?,?)',
-      { replacements: [userId, price,status], type: QueryTypes.INSERT }
+      { replacements: [userId, price,'0'], type: QueryTypes.INSERT }
     );
 
     res.status(200).json({ message: 'payment done!', error: false });
