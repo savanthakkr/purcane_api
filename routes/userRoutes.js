@@ -34,7 +34,8 @@ const {addsellSugarcane,
     fetchUserPaymentHistory,shopregister,updateShop,fetchShops,assignUsertoShop,fetchShopdetails,createAttendance,fetchattendancbyuser,
     fetchattendancuserbyDate,createLeaves,fetchleavebyuser,fetchleaveuserbyDate,createBtoCExpense,fetchExpensebyuser,addShopProduct,
     updateShopProduct,fetchAllShopProduct,assignProducttoShop,updateassignProducttoShop,fetchAllAssignShopProduct,employeelogin,
-    fetchEmpDetails,fetchAllAssignUser,addclosingquantity,fetchClosingQunatity,UpdateRevenue,fetchbtocpurchase,fetchbtocsell
+    fetchEmpDetails,fetchAllAssignUser,addclosingquantity,fetchClosingQunatity,UpdateRevenue,fetchbtocpurchase,fetchbtocsell,
+    updateUserStatus,fetchProductbyID,updateProduct,fetchAllUsersbyType,fetchTotalCostShop
  } = userController; 
 
 router.post('/login', login);
@@ -83,7 +84,7 @@ router.get('/fetchpurchaseSugarcane/:farmerName', fetchpurchaseSugarcane);
 router.post('/addsellTransportcost', addsellTransportcost);
 router.get('/fetchsellTransportCost', fetchsellTransportCost);
 router.post('/addpurchaseTransportCost', addpurchaseTransportCost);
-router.get('/fetchpurchaseTransportCost/:agentName', fetchpurchaseTransportCost);
+router.post('/fetchpurchaseTransportCost', fetchpurchaseTransportCost);
 router.post('/adddailyWages', adddailyWages);
 router.get('/fetchdailyWages', fetchdailyWages);
 router.post('/addDeisleCost', addDeisleCost);
@@ -96,6 +97,10 @@ router.get('/fetchExpences', fetchExpences);
 router.post('/fetchProfile', fetchProfile);
 router.post('/updateProfile', updateProfile);
 router.post('/fetchUserPaymentHistory', fetchUserPaymentHistory);
+router.post('/updateUserStatus', updateUserStatus);
+router.post('/fetchProductbyID', fetchProductbyID);
+router.post('/updateProduct', updateProduct);
+router.post('/fetchAllUsersbyType', fetchAllUsersbyType);
 
 //btoc
 router.post('/shopregister', shopregister);
@@ -125,5 +130,6 @@ router.post('/fetchClosingQunatity', fetchClosingQunatity);
 router.post('/UpdateRevenue', UpdateRevenue);
 router.post('/fetchbtocpurchase', fetchbtocpurchase);
 router.post('/fetchbtocsell', fetchbtocsell);
+router.post('/fetchTotalCostShop', fetchTotalCostShop);
 
 module.exports = router;

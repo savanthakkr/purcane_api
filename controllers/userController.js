@@ -303,6 +303,57 @@ const updateCategory = async (req, res) => {
   }
 };
 
+
+const updateProduct = async (req, res) => {
+  try {
+    const { pId,cId,pname,pdesc,pimage,pprice,sellPrice,pqunt } = req.body;
+
+    const existingProduct = await sequelize.query(
+      'SELECT * FROM product WHERE category_id = ? AND LOWER(p_name) = LOWER(?) AND id != ?',
+      {
+        replacements: [cId,pname,pId],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (existingProduct.length === 0) {
+
+      const categoryDetails = await sequelize.query(
+        'SELECT * FROM product WHERE id = ?',
+        {
+          replacements: [pId],
+          type: QueryTypes.SELECT
+        }
+      );
+
+      var imagePath = "";
+
+      if(pimage != ""){
+        imagePath = saveBase64File(pimage, 'uploads');
+      } else {
+        imagePath = categoryDetails[0].p_image;
+      }
+      
+
+      // Insert new jobseeker into the database
+      const result = await sequelize.query(
+        'UPDATE product SET category_id = ?, p_name = ?,p_desc = ?,p_image = ?,p_price = ?,sellPrice = ?,availble_quntity = ? WHERE id = ?',
+        {
+          replacements: [cId,pname,pdesc,imagePath,pprice,sellPrice,pqunt,pId],
+          type: QueryTypes.UPDATE
+        }
+      );
+
+      res.status(200).json({ error: false, message: 'Product update successfully!!!'});
+    } else {
+      res.status(400).json({ error: true, message: 'Product already exist!!!' });
+    }
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Product not updated!!!' });
+  }
+};
+
 const deleteCategory = async (req, res) => {
   try {
     const { cId } = req.body;
@@ -360,6 +411,29 @@ const fetchProductAdmin = async (req, res) => {
 
     const productList = await sequelize.query('SELECT product.*,category.id as CID,category.cat_name as CNAME FROM product INNER JOIN category ON product.category_id = category.id',
       { replacements: [], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Product Fetch Successfully', Product: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Product not found', Product: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
+
+const fetchProductbyID = async (req, res) => {
+  try {
+
+    const { product_id } = req.body;
+
+    const productList = await sequelize.query('SELECT product.*,category.id as CID,category.cat_name as CNAME FROM product INNER JOIN category ON product.category_id = category.id WHERE product.id = ?',
+      { replacements: [product_id], type: QueryTypes.SELECT }); 
 
     if(productList.length > 0){
       return res.status(200).send({ error: false, message: 'Product Fetch Successfully', Product: productList });
@@ -446,7 +520,7 @@ const fetchActiveProduct = async (req, res) => {
 
 const register = async (req, res) => {
   try {
-    const { name,nName, oMobile,eMobile,landmark,sImage,block,password } = req.body;
+    const { name,nName, oMobile,eMobile,landmark,sImage,block,password,type } = req.body;
 
     const existingCategory = await sequelize.query(
       'SELECT * FROM register WHERE oNumber = ?',
@@ -461,9 +535,9 @@ const register = async (req, res) => {
 
       // Insert new jobseeker into the database
       const result = await sequelize.query(
-        'INSERT INTO register (name, nName,oNumber,eNumber,landmark,sImages,block,password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO register (name, nName,oNumber,eNumber,landmark,sImages,block,password,type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
         {
-          replacements: [name,nName,oMobile,eMobile,landmark,imagePath,block,password],
+          replacements: [name,nName,oMobile,eMobile,landmark,imagePath,block,password,type],
           type: QueryTypes.INSERT
         }
       );
@@ -1170,24 +1244,27 @@ const fetchsellTransportCostAll = async (req, res) => {
 
 const fetchsellTransportCost = async (req, res) => {
   try {
-    // Query to fetch data from transportcost_sell and transportcost_purchase with required calculations
     const productList = await sequelize.query(`
       SELECT 
         ts.agent_name,
         SUM(ts.wieght) AS total_weight,
         AVG(ts.rate) AS average_rate,
         SUM(ts.amount) AS total_sell_amount,
-        COALESCE(SUM(ts.amount) - COALESCE(SUM(tp.amount), 0), SUM(ts.amount)) AS final_amount
+        COALESCE(SUM(ts.amount) - COALESCE(tp.total_purchase_amount, 0), SUM(ts.amount)) AS final_amount
       FROM transportcost_sell ts
-      LEFT JOIN transportcost_purchase tp 
-        ON ts.agent_name = tp.agent_name
+      LEFT JOIN (
+        SELECT 
+          agent_name,
+          SUM(amount) AS total_purchase_amount
+        FROM transportcost_purchase
+        GROUP BY agent_name
+      ) tp ON ts.agent_name = tp.agent_name
       GROUP BY ts.agent_name
     `, {
       type: QueryTypes.SELECT
     });
 
     if (productList.length > 0) {
-      // Convert each value in the result to a string for consistency
       const productListAsStrings = productList.map(item => ({
         agent_name: item.agent_name.toString(),
         total_weight: item.total_weight.toString(),
@@ -1219,6 +1296,7 @@ const fetchsellTransportCost = async (req, res) => {
 };
 
 
+
 const addpurchaseTransportCost = async (req, res) => {
   try {
     const { agent_name,amount,transaction_id,payment_mode,payment_date,receipt } = req.body;
@@ -1242,7 +1320,7 @@ const addpurchaseTransportCost = async (req, res) => {
 };
 
 const fetchpurchaseTransportCost = async (req, res) => {
-  const { agentName } = req.params; // Get farmer name from request parameters
+  const { agentName } = req.body; // Get farmer name from request parameters
 
   try {
     // Fetch data from the purchase_sugarcane table
@@ -1680,13 +1758,13 @@ const fetchTotalAmount = async (req, res) => {
 };
 
 const createPayment = async (req, res) => {
-  const { userId, price } = req.body;
+  const { userId, price,status } = req.body;
 
   try {
     // Fetch orders created in the last hour with status '1'
     const result = await sequelize.query(
       'INSERT INTO paymentdone (user_id, amount,status) VALUES (?,?,?)',
-      { replacements: [userId, price,'0'], type: QueryTypes.INSERT }
+      { replacements: [userId, price,status], type: QueryTypes.INSERT }
     );
 
     res.status(200).json({ message: 'payment done!', error: false });
@@ -1906,7 +1984,7 @@ const updateUserCart = async (req, res) => {
 const fetchAllUsers = async (req, res) => {
   try {
 
-    const productList = await sequelize.query('SELECT * FROM register',
+    const productList = await sequelize.query('SELECT * FROM register ORDER BY id DESC',
       { replacements: [], type: QueryTypes.SELECT }); 
 
     if(productList.length > 0){
@@ -1924,7 +2002,26 @@ const fetchAllUsers = async (req, res) => {
   }
 };
 
+const fetchAllUsersbyType = async (req, res) => {
+  try {
+    const { type } = req.body;
+    const productList = await sequelize.query('SELECT * FROM register WHERE type = ? ORDER BY id DESC',
+      { replacements: [type], type: QueryTypes.SELECT }); 
 
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', Users: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', Users: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
+      error: true
+    });
+  }
+};
 
 
 const UpdateView = async (req, res) => {
@@ -2777,12 +2874,12 @@ const fetchleaveuserbyDate = async (req, res) => {
 
 const createBtoCExpense = async (req, res) => {
   try {
-    const { userid,reason,amount } = req.body;
+    const { userid,shop_id,reason,amount,add_date } = req.body;
 
     const result = await sequelize.query(
-      'INSERT INTO btoc_expense (userid,reason,amount) VALUES (?, ?, ?)',
+      'INSERT INTO btoc_expense (userid,shop_id,reason,amount,add_date) VALUES (?, ?, ?, ?, ?)',
       {
-        replacements: [userid,reason,amount],
+        replacements: [userid,shop_id,reason,amount,add_date],
         type: QueryTypes.INSERT
       }
     );
@@ -3245,9 +3342,6 @@ const fetchClosingQunatity = async (req, res) => {
   try {
 
     const { shop_id,close_date } = req.body;
-    console.log(req.body);
-    
-
     const existingClosing = await sequelize.query(
       'SELECT daily_close_shop_quantity.*,assign_shop_product.quantity as RQUNT,assign_shop_product.amount as AMT,shop_product.p_name as SPNAME FROM daily_close_shop_quantity INNER JOIN assign_shop_product ON daily_close_shop_quantity.ass_id = assign_shop_product.id INNER JOIN shop_product ON assign_shop_product.p_id = shop_product.id WHERE daily_close_shop_quantity.shop_id = ? AND daily_close_shop_quantity.close_date = ?',
       {
@@ -3270,6 +3364,95 @@ const fetchClosingQunatity = async (req, res) => {
     });
   }
 };
+
+const updateUserStatus = async (req, res) => {
+  try {
+    const { user_id,status } = req.body;
+
+    const result = await sequelize.query(
+      'UPDATE register SET status = ? WHERE id = ?',
+      {
+        replacements: [status,user_id],
+        type: QueryTypes.UPDATE
+      }
+    );
+
+    res.status(200).json({ error: false, message: 'Update successfully!!!'});
+  } catch (error) {
+    console.error('Error registering user:', error); // Log the error
+    res.status(500).json({ error: true,message: 'Data not Updated!!!' });
+  }
+};
+
+const fetchTotalCostShop = async (req, res) => {
+  try {
+    const { todayDate } = req.body;
+    
+    // First query to fetch shops data
+    const allShops = await sequelize.query(
+      'SELECT * FROM shops',
+      {
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (allShops.length > 0) {
+      // Use Promise.all to execute second query for each shop
+      const shopDataWithQuantities = await Promise.all(
+        allShops.map(async (shop) => {
+          const shopId = shop.id;
+          
+          // Fetch variable cost (sum of open_quantity * amount)
+          const openQuantityData = await sequelize.query(
+            `SELECT SUM(open_quantity * amount) AS variableCost
+             FROM dayli_open_shop_quantity 
+             WHERE shop_id = ? AND open_date = ?`,
+            { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
+          );
+          const variableCost = openQuantityData[0]?.variableCost || 0;
+
+          // Fetch other expenses
+          const otherExpenseData = await sequelize.query(
+            `SELECT SUM(amount) AS otherExpense
+             FROM btoc_expense 
+             WHERE shop_id = ? AND add_date = ?`,
+            { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
+          );
+          const otherExpense = otherExpenseData[0]?.otherExpense || 0;
+          const costDate = todayDate;
+
+          // Return shop data along with single values for costs
+          return {
+            ...shop,
+            variableCost,
+            otherExpense,
+            costDate
+          };
+        })
+      );
+
+      return res.status(200).send({
+        error: false,
+        message: 'Data Fetch Successfully',
+        DailyShopCost: shopDataWithQuantities
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: 'Data not found',
+        DailyShopCost: []
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
+      error: true
+    });
+  }
+};
+
 
 module.exports = {
   login,
@@ -3356,5 +3539,10 @@ module.exports = {
   fetchClosingQunatity,
   UpdateRevenue,
   fetchbtocpurchase,
-  fetchbtocsell
+  fetchbtocsell,
+  updateUserStatus,
+  fetchProductbyID,
+  updateProduct,
+  fetchAllUsersbyType,
+  fetchTotalCostShop
 };
