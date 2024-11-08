@@ -1872,18 +1872,14 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
       });
     }
 
-    // Create a combined array of orders and payments, adding a "type" key
-    const combinedData = [];
+    // Combine orders and payments with respective type
+    const combinedData = [
+      ...orderList.map(order => ({ ...order, type: 'O' })),
+      ...paymentList.map(payment => ({ ...payment, type: 'P' }))
+    ];
 
-    // Add orders to the combined data array with type 'O'
-    orderList.forEach(order => {
-      combinedData.push({ ...order, type: 'O' });
-    });
-
-    // Add payments to the combined data array with type 'P'
-    paymentList.forEach(payment => {
-      combinedData.push({ ...payment, type: 'P' });
-    });
+    // Sort combined data by created_at in descending order
+    combinedData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     // Send the combined response
     return res.status(200).send({
@@ -1893,7 +1889,7 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+    console.error('Error fetching data:', error);
     res.status(500).send({
       message: 'Error fetching data',
       error: true
