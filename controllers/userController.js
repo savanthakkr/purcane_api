@@ -1840,6 +1840,9 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
       }
     );
 
+    // Calculate total order amount by summing `tPrice`
+    const orderTotalAmount = orderList.reduce((total, order) => total + (order.tPrice || 0), 0);
+
     // If orders are found, fetch the corresponding cart items for each order
     if (orderList.length > 0) {
       for (const order of orderList) {
@@ -1863,6 +1866,9 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
       }
     );
 
+    // Calculate total payment amount by summing `amount`
+    const paymentTotal = paymentList.reduce((total, payment) => total + (payment.amount || 0), 0);
+
     // If neither orders nor payments are found, return 404
     if (orderList.length === 0 && paymentList.length === 0) {
       return res.status(404).send({
@@ -1881,11 +1887,13 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
     // Sort combined data by created_at in descending order
     combinedData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-    // Send the combined response
+    // Send the combined response with total amounts
     return res.status(200).send({
       error: false,
       message: 'Data fetched successfully',
-      Data: combinedData
+      Data: combinedData,
+      orderTotalAmount,
+      paymentTotal
     });
 
   } catch (error) {
@@ -1896,6 +1904,7 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
     });
   }
 };
+
 
 
 
