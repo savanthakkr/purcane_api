@@ -55,7 +55,7 @@ router.get('/fetchordersforadmin', fetchordersforadmin);
 router.get('/fetchAllUsers', fetchAllUsers);
 router.post('/addPayment', addPayment);
 
-router.get('/fetchOrdersAndPaymentsForAdmin/:user_id', fetchOrdersAndPaymentsForAdmin);
+router.post('/fetchOrdersAndPaymentsForAdmin', fetchOrdersAndPaymentsForAdmin);
 router.post('/createPayment', createPayment);
 router.post('/fetchTotalAmount', fetchTotalAmount);
 router.post('/fetchPaymentHistory', fetchPaymentHistory);
