@@ -1859,6 +1859,9 @@ const fetchAllUsers = async (req, res) => {
 
       // Calculate total payment amount by summing `amount` as a number for this user
       user.paymentTotal = paymentList.reduce((total, payment) => total + Number(payment.amount || 0), 0);
+
+      // Calculate the difference between orderTotalAmount and paymentTotal
+      user.pendingAmount = user.orderTotalAmount - user.paymentTotal;
     }
 
     if (productList.length > 0) {
@@ -1874,6 +1877,7 @@ const fetchAllUsers = async (req, res) => {
         Users: []
       });
     }
+
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -1882,6 +1886,7 @@ const fetchAllUsers = async (req, res) => {
     });
   }
 };
+
 
 
 
