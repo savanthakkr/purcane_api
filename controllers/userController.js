@@ -1829,8 +1829,8 @@ const fetchAdminPayments = async (req, res) => {
 
 const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
   try {
-    const userId = req.body;
-    
+    const { userId } = req.body;
+
     // Fetch orders for the given user_id
     const orderList = await sequelize.query(
       'SELECT orders.*, register.name as NAME, register.oNumber as OPHONE FROM orders INNER JOIN register ON orders.user_id = register.id WHERE orders.user_id = ? ORDER BY orders.created_at DESC',
