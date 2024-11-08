@@ -1829,49 +1829,60 @@ const fetchAdminPayments = async (req, res) => {
 
 const fetchAllUsers = async (req, res) => {
   try {
+    const productList = await sequelize.query(
+      'SELECT * FROM register ORDER BY id DESC',
+      { type: QueryTypes.SELECT }
+    );
 
-    const productList = await sequelize.query('SELECT * FROM register ORDER BY id DESC',
-      { replacements: [], type: QueryTypes.SELECT }); 
-
-
+    // Loop over each user in productList to fetch orders and payments
+    for (const user of productList) {
+      // Fetch orders for the given user_id
       const orderList = await sequelize.query(
         'SELECT orders.*, register.name as NAME, register.oNumber as OPHONE FROM orders INNER JOIN register ON orders.user_id = register.id WHERE orders.user_id = ? ORDER BY orders.created_at DESC',
         {
-          replacements: [productList.id],
+          replacements: [user.id],
           type: QueryTypes.SELECT
         }
       );
-  
-      // Calculate total order amount by summing `tPrice` as a number
-      const orderTotalAmount = orderList.reduce((total, order) => total + Number(order.tPrice || 0), 0);
-  
+
+      // Calculate total order amount by summing `tPrice` as a number for this user
+      user.orderTotalAmount = orderList.reduce((total, order) => total + Number(order.tPrice || 0), 0);
+
       // Fetch payments for the given user_id
       const paymentList = await sequelize.query(
         'SELECT paymentdone.*, register.name as NAME, register.oNumber as ONUMBER, register.eNumber as ENUMBER FROM paymentdone INNER JOIN register ON paymentdone.user_id = register.id WHERE paymentdone.user_id = ? ORDER BY paymentdone.created_at DESC',
         {
-          replacements: [productList.id],
+          replacements: [user.id],
           type: QueryTypes.SELECT
         }
       );
-  
-      // Calculate total payment amount by summing `amount` as a number
-      const paymentTotal = paymentList.reduce((total, payment) => total + Number(payment.amount || 0), 0);
 
-    if(productList.length > 0){
-      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', Users: productList,orderTotalAmount,
-        paymentTotal });
-    } else {
-      return res.status(404).send({ error: true, message: 'Data not found', Users: [] });
+      // Calculate total payment amount by summing `amount` as a number for this user
+      user.paymentTotal = paymentList.reduce((total, payment) => total + Number(payment.amount || 0), 0);
     }
 
+    if (productList.length > 0) {
+      return res.status(200).send({
+        error: false,
+        message: 'Data fetched successfully',
+        Users: productList
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: 'Data not found',
+        Users: []
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send({
-      message: 'Data not found',
+      message: 'Internal server error',
       error: true
     });
   }
 };
+
 
 
 const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
