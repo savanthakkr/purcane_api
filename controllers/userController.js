@@ -1837,7 +1837,7 @@ const fetchAllUsers = async (req, res) => {
       const orderList = await sequelize.query(
         'SELECT orders.*, register.name as NAME, register.oNumber as OPHONE FROM orders INNER JOIN register ON orders.user_id = register.id WHERE orders.user_id = ? ORDER BY orders.created_at DESC',
         {
-          replacements: [userId],
+          replacements: [productList.id],
           type: QueryTypes.SELECT
         }
       );
@@ -1849,7 +1849,7 @@ const fetchAllUsers = async (req, res) => {
       const paymentList = await sequelize.query(
         'SELECT paymentdone.*, register.name as NAME, register.oNumber as ONUMBER, register.eNumber as ENUMBER FROM paymentdone INNER JOIN register ON paymentdone.user_id = register.id WHERE paymentdone.user_id = ? ORDER BY paymentdone.created_at DESC',
         {
-          replacements: [userId],
+          replacements: [productList.id],
           type: QueryTypes.SELECT
         }
       );
