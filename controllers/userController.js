@@ -1856,7 +1856,7 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
 
     // Fetch payments for the given user_id
     const paymentList = await sequelize.query(
-      'SELECT paymentDone.*, register.name as NAME, register.oNumber as ONUMBER, register.eNumber as ENUMBER FROM paymentdone INNER JOIN register ON paymentdone.user_id = register.id WHERE paymentdone.user_id = ? ORDER BY paymentdone.created_at DESC',
+      'SELECT paymentdone.*, register.name as NAME, register.oNumber as ONUMBER, register.eNumber as ENUMBER FROM paymentdone INNER JOIN register ON paymentdone.user_id = register.id WHERE paymentdone.user_id = ? ORDER BY paymentdone.created_at DESC',
       {
         replacements: [userId],
         type: QueryTypes.SELECT
