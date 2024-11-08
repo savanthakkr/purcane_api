@@ -1840,8 +1840,8 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
       }
     );
 
-    // Calculate total order amount by summing `tPrice`
-    const orderTotalAmount = orderList.reduce((total, order) => total + (order.tPrice || 0), 0);
+    // Calculate total order amount by summing `tPrice` as a number
+    const orderTotalAmount = orderList.reduce((total, order) => total + Number(order.tPrice || 0), 0);
 
     // If orders are found, fetch the corresponding cart items for each order
     if (orderList.length > 0) {
@@ -1866,8 +1866,8 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
       }
     );
 
-    // Calculate total payment amount by summing `amount`
-    const paymentTotal = paymentList.reduce((total, payment) => total + (payment.amount || 0), 0);
+    // Calculate total payment amount by summing `amount` as a number
+    const paymentTotal = paymentList.reduce((total, payment) => total + Number(payment.amount || 0), 0);
 
     // If neither orders nor payments are found, return 404
     if (orderList.length === 0 && paymentList.length === 0) {
@@ -1904,6 +1904,7 @@ const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
     });
   }
 };
+
 
 
 
