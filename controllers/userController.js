@@ -3475,7 +3475,7 @@ const fetchTotalCostShop = async (req, res) => {
                 SUM(online) AS onlineTotal,
                 SUM(offline) AS offlineTotal
              FROM revenue
-             WHERE shop_name = ? AND revenue_date = ?`,
+             WHERE shop_name = ? AND date = ?`,
             { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
           );
           
