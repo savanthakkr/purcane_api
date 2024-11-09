@@ -3446,11 +3446,11 @@ const fetchTotalCostShop = async (req, res) => {
     );
 
     if (allShops.length > 0) {
-      // Use Promise.all to execute second query for each shop
+      // Use Promise.all to execute additional queries for each shop
       const shopDataWithQuantities = await Promise.all(
         allShops.map(async (shop) => {
           const shopId = shop.id;
-          
+
           // Fetch variable cost (sum of open_quantity * amount)
           const openQuantityData = await sequelize.query(
             `SELECT SUM(open_quantity * amount) AS variableCost
@@ -3468,14 +3468,28 @@ const fetchTotalCostShop = async (req, res) => {
             { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
           );
           const otherExpense = otherExpenseData[0]?.otherExpense || 0;
-          const costDate = todayDate;
 
-          // Return shop data along with single values for costs
+          // Fetch revenue data (sum of amounts for online and offline payments)
+          const revenueData = await sequelize.query(
+            `SELECT 
+                SUM(CASE WHEN payment_type = 'online' THEN amount ELSE 0 END) AS onlineTotal,
+                SUM(CASE WHEN payment_type = 'offline' THEN amount ELSE 0 END) AS offlineTotal
+             FROM revenue
+             WHERE shop_name = ? AND revenue_date = ?`,
+            { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
+          );
+
+          const onlineTotal = revenueData[0]?.onlineTotal || 0;
+          const offlineTotal = revenueData[0]?.offlineTotal || 0;
+
+          // Return shop data along with calculated values for costs and revenue totals
           return {
             ...shop,
             variableCost,
             otherExpense,
-            costDate
+            onlineTotal,
+            offlineTotal,
+            costDate: todayDate
           };
         })
       );
