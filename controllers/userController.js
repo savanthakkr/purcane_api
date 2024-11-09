@@ -3435,8 +3435,13 @@ const updateUserStatus = async (req, res) => {
 
 const fetchTotalCostShop = async (req, res) => {
   try {
-    const { todayDate } = req.body;
-    
+    const { startDate, endDate } = req.body;
+
+    // Set default dates if not provided
+    const today = new Date().toISOString().split('T')[0];
+    const finalStartDate = startDate || today; // startDate defaults to today if not provided
+    const finalEndDate = endDate || today;     // endDate defaults to today if not provided
+
     // First query to fetch shops data
     const allShops = await sequelize.query(
       'SELECT * FROM shops',
@@ -3450,13 +3455,13 @@ const fetchTotalCostShop = async (req, res) => {
       const shopDataWithQuantities = await Promise.all(
         allShops.map(async (shop) => {
           const shopId = shop.id;
-          
+
           // Fetch variable cost (sum of open_quantity * amount)
           const openQuantityData = await sequelize.query(
             `SELECT SUM(open_quantity * amount) AS variableCost
              FROM dayli_open_shop_quantity 
-             WHERE shop_id = ? AND open_date = ?`,
-            { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
+             WHERE shop_id = ? AND open_date BETWEEN ? AND ?`,
+            { replacements: [shopId, finalStartDate, finalEndDate], type: QueryTypes.SELECT }
           );
           const variableCost = openQuantityData[0]?.variableCost || 0;
 
@@ -3464,18 +3469,18 @@ const fetchTotalCostShop = async (req, res) => {
           const otherExpenseData = await sequelize.query(
             `SELECT SUM(amount) AS otherExpense
              FROM btoc_expense 
-             WHERE shop_id = ? AND add_date = ?`,
-            { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
+             WHERE shop_id = ? AND add_date BETWEEN ? AND ?`,
+            { replacements: [shopId, finalStartDate, finalEndDate], type: QueryTypes.SELECT }
           );
           const otherExpense = otherExpenseData[0]?.otherExpense || 0;
-          const costDate = todayDate;
 
           // Return shop data along with single values for costs
           return {
             ...shop,
             variableCost,
             otherExpense,
-            costDate
+            startDate: finalStartDate,
+            endDate: finalEndDate
           };
         })
       );
@@ -3501,6 +3506,7 @@ const fetchTotalCostShop = async (req, res) => {
     });
   }
 };
+
 
 
 module.exports = {
