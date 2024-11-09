@@ -3437,12 +3437,10 @@ const fetchTotalCostShop = async (req, res) => {
   try {
     const { startDate, endDate } = req.body;
 
-    // Set default dates if not provided
+    // Set default to today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
-    const finalStartDate = startDate || today; // startDate defaults to today if not provided
-    const finalEndDate = endDate || today;     // endDate defaults to today if not provided
-
-    // First query to fetch shops data
+    
+    // First query to fetch all shops
     const allShops = await sequelize.query(
       'SELECT * FROM shops',
       {
@@ -3451,17 +3449,21 @@ const fetchTotalCostShop = async (req, res) => {
     );
 
     if (allShops.length > 0) {
-      // Use Promise.all to execute second query for each shop
+      // Use Promise.all to execute the queries for each shop
       const shopDataWithQuantities = await Promise.all(
         allShops.map(async (shop) => {
           const shopId = shop.id;
+
+          // If dates are provided, use them; otherwise, fetch all data up to today
+          const dateCondition = startDate && endDate ? `BETWEEN ? AND ?` : `<= ?`;
+          const dateParams = startDate && endDate ? [shopId, startDate, endDate] : [shopId, today];
 
           // Fetch variable cost (sum of open_quantity * amount)
           const openQuantityData = await sequelize.query(
             `SELECT SUM(open_quantity * amount) AS variableCost
              FROM dayli_open_shop_quantity 
-             WHERE shop_id = ? AND open_date BETWEEN ? AND ?`,
-            { replacements: [shopId, finalStartDate, finalEndDate], type: QueryTypes.SELECT }
+             WHERE shop_id = ? AND open_date ${dateCondition}`,
+            { replacements: dateParams, type: QueryTypes.SELECT }
           );
           const variableCost = openQuantityData[0]?.variableCost || 0;
 
@@ -3469,25 +3471,25 @@ const fetchTotalCostShop = async (req, res) => {
           const otherExpenseData = await sequelize.query(
             `SELECT SUM(amount) AS otherExpense
              FROM btoc_expense 
-             WHERE shop_id = ? AND add_date BETWEEN ? AND ?`,
-            { replacements: [shopId, finalStartDate, finalEndDate], type: QueryTypes.SELECT }
+             WHERE shop_id = ? AND add_date ${dateCondition}`,
+            { replacements: dateParams, type: QueryTypes.SELECT }
           );
           const otherExpense = otherExpenseData[0]?.otherExpense || 0;
 
-          // Return shop data along with single values for costs
+          // Return shop data along with calculated costs
           return {
             ...shop,
             variableCost,
             otherExpense,
-            startDate: finalStartDate,
-            endDate: finalEndDate
+            startDate: startDate || 'All time',
+            endDate: endDate || today
           };
         })
       );
 
       return res.status(200).send({
         error: false,
-        message: 'Data Fetch Successfully',
+        message: 'Data fetched successfully',
         DailyShopCost: shopDataWithQuantities
       });
     } else {
@@ -3499,13 +3501,14 @@ const fetchTotalCostShop = async (req, res) => {
     }
 
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).send({
-      message: 'Data not found',
+      message: 'Internal server error',
       error: true
     });
   }
 };
+
 
 
 
