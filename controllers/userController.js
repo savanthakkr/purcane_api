@@ -3472,15 +3472,16 @@ const fetchTotalCostShop = async (req, res) => {
           // Fetch revenue data (sum of amounts for online and offline payments)
           const revenueData = await sequelize.query(
             `SELECT 
-                SUM(CASE WHEN payment_type = 'online' THEN amount ELSE 0 END) AS onlineTotal,
-                SUM(CASE WHEN payment_type = 'offline' THEN amount ELSE 0 END) AS offlineTotal
+                SUM(online) AS onlineTotal,
+                SUM(offline) AS offlineTotal
              FROM revenue
              WHERE shop_name = ? AND revenue_date = ?`,
             { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
           );
-
+          
           const onlineTotal = revenueData[0]?.onlineTotal || 0;
           const offlineTotal = revenueData[0]?.offlineTotal || 0;
+          
 
           // Return shop data along with calculated values for costs and revenue totals
           return {
