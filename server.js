@@ -24,8 +24,8 @@ const sessionConfig = {
 const app = express();
 const PORT = 3309;
 
-app.use(express.json({ limit: '50mb' }));
-app.use(bodyParser.json({ limit: '50mb' })); // Adjust the limit as needed
+app.use(express.json({ limit: '100mb' }));
+app.use(bodyParser.json({ limit: '100mb' })); // Adjust the limit as needed
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(morgan('dev'));
 app.use(cors());
