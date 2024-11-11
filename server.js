@@ -34,6 +34,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(express.json({ limit: '10mb' })); // Adjust the limit as needed
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Test the database connection
 testConnection()
