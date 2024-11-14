@@ -731,6 +731,11 @@ const placeOrder = async (req, res) => {
 const addPayment = async (req, res) => {
   const { userId, price, notes } = req.body;
 
+  console.log(req.body);
+  console.log("addpayment");
+  
+  
+
   try {
     // Fetch orders created in the last hour with status '1'
     const UserOrderResult = await sequelize.query(
