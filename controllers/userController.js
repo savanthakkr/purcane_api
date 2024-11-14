@@ -466,7 +466,6 @@ const fetchProduct = async (req, res) => {
       INNER JOIN category ON product.category_id = category.id
       INNER JOIN register ON register.id = :userId
       WHERE product.status = :status
-      AND product.type = 'BtoB'
     `, 
     {
       replacements: { userId, status: '0' }, // Use named replacements
@@ -2978,7 +2977,7 @@ const fetchExpensebyuser = async (req, res) => {
 
 const addShopProduct = async (req, res) => {
   try {
-    const { p_name,p_image,p_desc,type } = req.body;
+    const { p_name,p_image,p_desc } = req.body;
     const existingProduct = await sequelize.query(
       'SELECT * FROM shop_product WHERE LOWER(p_name) = LOWER(?)',
       {
@@ -2992,9 +2991,9 @@ const addShopProduct = async (req, res) => {
 
       // Insert new jobseeker into the database
       const result = await sequelize.query(
-        'INSERT INTO shop_product (p_name,p_image,p_desc,type) VALUES (?,?,?,?)',
+        'INSERT INTO shop_product (p_name,p_image,p_desc) VALUES (?,?,?)',
         {
-          replacements: [p_name,imagePath,p_desc,type],
+          replacements: [p_name,imagePath,p_desc],
           type: QueryTypes.INSERT
         }
       );
