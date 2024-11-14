@@ -13,6 +13,7 @@ const nodemailer = require('nodemailer');
 const { error, log } = require('console');
 const QRCode = require('qrcode');
 const multer = require('multer');
+const { response } = require('express');
 // Set up storage with multer to store images in the 'uploads' directory
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -2924,6 +2925,8 @@ const fetchleaveuserbyDate = async (req, res) => {
 const createBtoCExpense = async (req, res) => {
   try {
     const { userid,shop_id,reason,amount,add_date } = req.body;
+    console.log(req.body);
+    
 
     const result = await sequelize.query(
       'INSERT INTO btoc_expense (userid,shop_id,reason,amount,add_date) VALUES (?, ?, ?, ?, ?)',
