@@ -561,8 +561,8 @@ const loginUser = async (req, res) => {
   try {
     const { oMobile,password } = req.body;
 
-    const [existingUser] = await sequelize.query('SELECT * FROM register WHERE oNumber = ? AND password = ? AND status = ?',
-      { replacements: [oMobile,password,'0'], type: QueryTypes.SELECT });
+    const [existingUser] = await sequelize.query('SELECT * FROM register WHERE oNumber = ? AND password = ? AND status = ? AND type = ?',
+      { replacements: [oMobile,password,'0','BtoB'], type: QueryTypes.SELECT });
     if (existingUser) {
       return res.status(200).send({ error: false, message: 'Login success!', Login: existingUser });
     } else {
