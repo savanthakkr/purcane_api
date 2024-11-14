@@ -3186,6 +3186,8 @@ const fetchAllAssignShopProduct = async (req, res) => {
   try {
 
     const { shop_id,currunt_date } = req.body;
+    console.log(currunt_date);
+    
 
     const productList = await sequelize.query('SELECT assign_shop_product.*,shop_product.p_name as PNAME,shop_product.p_image as PIMAGE,shop_product.p_desc as PDESC FROM assign_shop_product INNER JOIN shop_product ON assign_shop_product.p_id =  shop_product.id WHERE assign_shop_product.s_id = ? ORDER BY assign_shop_product.id DESC',
       { replacements: [shop_id], type: QueryTypes.SELECT }); 
