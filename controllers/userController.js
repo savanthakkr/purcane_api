@@ -317,7 +317,7 @@ const updateShopByID = async (req, res) => {
 
     // Update query
     const [updatedRows] = await sequelize.query(`
-      UPDATE shop
+      UPDATE shops
       SET 
         shop_name = :shop_name,
         owner_name = :owner_name,
@@ -505,7 +505,7 @@ const fetchShopByID = async (req, res) => {
 
     // Query to fetch shop details
     const shopDetails = await sequelize.query(
-      'SELECT shop.*, owner.id as OwnerID, owner.name as OwnerName FROM shop INNER JOIN owner ON shop.owner_id = owner.id WHERE shop.id = ?',
+      'SELECT shops.*, owner.id as OwnerID, owner.name as OwnerName FROM shop INNER JOIN owner ON shop.owner_id = owner.id WHERE shop.id = ?',
       { replacements: [shop_id], type: QueryTypes.SELECT }
     );
 
