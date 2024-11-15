@@ -505,7 +505,7 @@ const fetchShopByID = async (req, res) => {
 
     // Query to fetch shop details
     const shopDetails = await sequelize.query(
-      'SELECT shops.*, owner.id as OwnerID, owner.name as OwnerName FROM shop INNER JOIN owner ON shop.owner_id = owner.id WHERE shop.id = ?',
+      'SELECT shops.*, owner.id as OwnerID, owner.name as OwnerName FROM shops INNER JOIN owner ON shops.owner_id = owner.id WHERE shops.id = ?',
       { replacements: [shop_id], type: QueryTypes.SELECT }
     );
 
