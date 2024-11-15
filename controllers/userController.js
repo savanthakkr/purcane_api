@@ -332,17 +332,7 @@ const updateShopByID = async (req, res) => {
       type: QueryTypes.UPDATE
     });
 
-    if (updatedRows > 0) {
-      return res.status(200).send({
-        error: false,
-        message: 'Shop updated successfully',
-      });
-    } else {
-      return res.status(404).send({
-        error: true,
-        message: 'Shop not found or no changes made',
-      });
-    }
+    res.status(200).json({ error: false, message: 'Shop update successfully!!!'});
   } catch (error) {
     console.error(error);
     res.status(500).send({
