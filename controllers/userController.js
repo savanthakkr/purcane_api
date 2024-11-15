@@ -303,6 +303,54 @@ const updateCategory = async (req, res) => {
     res.status(500).json({ error: true,message: 'Category not updated!!!' });
   }
 };
+const updateShopByID = async (req, res) => {
+  try {
+    const { shop_id, shop_name, owner_name, owner_mobile, gst_no, address, salary, rent } = req.body;
+
+    // Check if shop_id is provided
+    if (!shop_id) {
+      return res.status(400).send({
+        error: true,
+        message: 'Shop ID is required',
+      });
+    }
+
+    // Update query
+    const [updatedRows] = await sequelize.query(`
+      UPDATE shop
+      SET 
+        shop_name = :shop_name,
+        owner_name = :owner_name,
+        owner_mobile = :owner_mobile,
+        gst_no = :gst_no,
+        address = :address,
+        salary = :salary,
+        rent = :rent
+      WHERE id = :shop_id
+    `, {
+      replacements: { shop_id, shop_name, owner_name, owner_mobile, gst_no, address, salary, rent },
+      type: QueryTypes.UPDATE
+    });
+
+    if (updatedRows > 0) {
+      return res.status(200).send({
+        error: false,
+        message: 'Shop updated successfully',
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: 'Shop not found or no changes made',
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      message: 'Failed to update shop details',
+      error: true,
+    });
+  }
+};
 
 
 const updateProduct = async (req, res) => {
@@ -450,6 +498,39 @@ const fetchProductbyID = async (req, res) => {
     });
   }
 };
+
+const fetchShopByID = async (req, res) => {
+  try {
+    const { shop_id } = req.body;
+
+    // Query to fetch shop details
+    const shopDetails = await sequelize.query(
+      'SELECT shop.*, owner.id as OwnerID, owner.name as OwnerName FROM shop INNER JOIN owner ON shop.owner_id = owner.id WHERE shop.id = ?',
+      { replacements: [shop_id], type: QueryTypes.SELECT }
+    );
+
+    if (shopDetails.length > 0) {
+      return res.status(200).send({
+        error: false,
+        message: 'Shop details fetched successfully',
+        Shop: shopDetails,
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: 'Shop not found',
+        Shop: [],
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      message: 'Failed to fetch shop details',
+      error: true,
+    });
+  }
+};
+
 
 const fetchProduct = async (req, res) => {
   try {
@@ -3615,7 +3696,9 @@ module.exports = {
   fetchbtocsell,
   updateUserStatus,
   fetchProductbyID,
+  fetchShopByID,
   updateProduct,
+  updateShopByID,
   fetchAllUsersbyType,
   fetchTotalCostShop
 };
