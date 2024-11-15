@@ -515,7 +515,7 @@ const fetchShopByID = async (req, res) => {
     const shopDetails = await sequelize.query(
       `
       SELECT id, shop_name, owner_name, owner_mobile, gst_no, address, salary, rent, status
-      FROM shop
+      FROM shops
       WHERE id = :shop_id
       `,
       {
