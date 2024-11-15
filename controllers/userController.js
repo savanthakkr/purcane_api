@@ -503,23 +503,39 @@ const fetchShopByID = async (req, res) => {
   try {
     const { shop_id } = req.body;
 
+    // Validate input
+    if (!shop_id) {
+      return res.status(400).send({
+        error: true,
+        message: 'Shop ID is required',
+      });
+    }
+
     // Query to fetch shop details
     const shopDetails = await sequelize.query(
-      'SELECT shops.*, owner.id as OwnerID, owner.name as OwnerName FROM shops INNER JOIN owner ON shops.owner_id = owner.id WHERE shops.id = ?',
-      { replacements: [shop_id], type: QueryTypes.SELECT }
+      `
+      SELECT id, shop_name, owner_name, owner_mobile, gst_no, address, salary, rent, status
+      FROM shop
+      WHERE id = :shop_id
+      `,
+      {
+        replacements: { shop_id },
+        type: QueryTypes.SELECT,
+      }
     );
 
+    // Check if shop details exist
     if (shopDetails.length > 0) {
       return res.status(200).send({
         error: false,
         message: 'Shop details fetched successfully',
-        Shop: shopDetails,
+        Shop: shopDetails[0], // Return the first shop if multiple rows are not expected
       });
     } else {
       return res.status(404).send({
         error: true,
         message: 'Shop not found',
-        Shop: [],
+        Shop: null,
       });
     }
   } catch (error) {
@@ -530,6 +546,7 @@ const fetchShopByID = async (req, res) => {
     });
   }
 };
+
 
 
 const fetchProduct = async (req, res) => {
