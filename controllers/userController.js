@@ -3354,7 +3354,6 @@ const fetchbtocpurchase = async (req, res) => {
 
 
 
-
 const fetchbtocsell = async (req, res) => {
   try {
 
@@ -3642,7 +3641,6 @@ module.exports = {
   fetchInventory,
   addProduct,
   fetchProduct,
-  fetchbtocselll,
   fetchActiveProduct,
   fetchOrder,
   fetchProductAdminById,

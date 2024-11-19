@@ -29,7 +29,6 @@ const {addsellSugarcane,
     AddRevenue,
     fetchProductAdminById,
     fetchInventory,
-    fetchbtocselll,
     fetchDeisleCost,fetchsellSugarcaneAllData,addPayment,fetchOrder, updateProductCart,placeOrder,deleteProductCart,fetchCartItems,addProductCart,loginUser,register,login,addCategory,fetchCategory,fetchCategorybyId,updateCategory,deleteCategory,fetchActiveCategory,addProduct,fetchProduct,
     fetchActiveProduct,deliverOrder,fetchAdminPayments,fetchAdminHomeData,createExpences,fetchExpences,fetchProfile,updateProfile,
     fetchUserPaymentHistory,shopregister,updateShop,fetchShops,assignUsertoShop,fetchShopdetails,createAttendance,fetchattendancbyuser,
@@ -133,7 +132,6 @@ router.post('/fetchClosingQunatity', fetchClosingQunatity);
 router.post('/UpdateRevenue', UpdateRevenue);
 router.post('/fetchbtocpurchase', fetchbtocpurchase);
 router.post('/fetchbtocsell', fetchbtocsell);
-router.post('/fetchbtocselll', fetchbtocselll);
 router.post('/fetchTotalCostShop', fetchTotalCostShop);
 
 module.exports = router;
