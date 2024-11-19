@@ -3359,12 +3359,19 @@ const fetchbtocselll = async (req, res) => {
     const productList = await sequelize.query(
       `
       SELECT 
-        close.*, -- Fetch all columns from daily_close_shop_quantity
-        open.open_quantity, -- Fetch open_quantity from daily_open_shop_quantity
-        CAST((open.open_quantity - close.close_quantity) AS CHAR) AS remaining_quantity -- Calculate and cast to string
+        close.id,
+        close.close_quantity,
+        close.close_date,
+        close.status,
+        close.shop_id,
+        close.ass_id,
+        close.created_at,
+        close.updated_at,
+        open.open_quantity,
+        CAST((open.open_quantity - close.close_quantity) AS CHAR) AS remaining_quantity
       FROM 
         daily_close_shop_quantity AS close
-      LEFT JOIN 
+      INNER JOIN 
         dayli_open_shop_quantity AS open
       ON 
         close.ass_id = open.ass_id
@@ -3377,9 +3384,17 @@ const fetchbtocselll = async (req, res) => {
     );
 
     if (productList.length > 0) {
-      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', SellData: productList });
+      return res.status(200).send({ 
+        error: false, 
+        message: 'Data Fetch Successfully', 
+        SellData: productList 
+      });
     } else {
-      return res.status(404).send({ error: true, message: 'Data not found', SellData: [] });
+      return res.status(404).send({ 
+        error: true, 
+        message: 'Data not found', 
+        SellData: [] 
+      });
     }
 
   } catch (error) {
@@ -3390,7 +3405,6 @@ const fetchbtocselll = async (req, res) => {
     });
   }
 };
-
 
 
 
