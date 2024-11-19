@@ -3363,7 +3363,7 @@ const fetchbtocselll = async (req, res) => {
         close.ass_id,
         close.close_quantity,
         open.open_quantity,
-        (open.open_quantity - close.close_quantity) AS remaining_quantity
+        CAST((open.open_quantity - close.close_quantity) AS CHAR) AS remaining_quantity
       FROM 
         daily_close_shop_quantity AS close
       INNER JOIN 
@@ -3392,6 +3392,7 @@ const fetchbtocselll = async (req, res) => {
     });
   }
 };
+
 
 
 const fetchbtocsell = async (req, res) => {
