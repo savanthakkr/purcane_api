@@ -3360,15 +3360,10 @@ const fetchbtocselll = async (req, res) => {
       `
       SELECT 
         close.id,
-        close.close_quantity,
-        close.close_date,
-        close.status,
-        close.shop_id,
         close.ass_id,
-        close.created_at,
-        close.updated_at,
+        close.close_quantity,
         open.open_quantity,
-        CAST((open.open_quantity - close.close_quantity) AS CHAR) AS remaining_quantity
+        (open.open_quantity - close.close_quantity) AS remaining_quantity
       FROM 
         daily_close_shop_quantity AS close
       INNER JOIN 
@@ -3384,17 +3379,9 @@ const fetchbtocselll = async (req, res) => {
     );
 
     if (productList.length > 0) {
-      return res.status(200).send({ 
-        error: false, 
-        message: 'Data Fetch Successfully', 
-        SellData: productList 
-      });
+      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', SellData: productList });
     } else {
-      return res.status(404).send({ 
-        error: true, 
-        message: 'Data not found', 
-        SellData: [] 
-      });
+      return res.status(404).send({ error: true, message: 'Data not found', SellData: [] });
     }
 
   } catch (error) {
@@ -3405,7 +3392,6 @@ const fetchbtocselll = async (req, res) => {
     });
   }
 };
-
 
 
 const fetchbtocsell = async (req, res) => {
