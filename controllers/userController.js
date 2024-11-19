@@ -3352,6 +3352,48 @@ const fetchbtocpurchase = async (req, res) => {
   }
 };
 
+const fetchbtocselll = async (req, res) => {
+  try {
+    const { ass_id } = req.body;
+
+    const productList = await sequelize.query(
+      `
+      SELECT 
+        close.id,
+        close.ass_id,
+        close.close_quantity,
+        open.open_quantity,
+        (open.open_quantity - close.close_quantity) AS remaining_quantity
+      FROM 
+        daily_close_shop_quantity AS close
+      INNER JOIN 
+        daily_open_shop_quantity AS open
+      ON 
+        close.ass_id = open.ass_id
+      WHERE 
+        close.ass_id = ?
+      ORDER BY 
+        close.id DESC
+      `,
+      { replacements: [ass_id], type: QueryTypes.SELECT }
+    );
+
+    if (productList.length > 0) {
+      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', SellData: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', SellData: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
+      error: true
+    });
+  }
+};
+
+
 const fetchbtocsell = async (req, res) => {
   try {
 
@@ -3639,6 +3681,7 @@ module.exports = {
   fetchInventory,
   addProduct,
   fetchProduct,
+  fetchbtocselll,
   fetchActiveProduct,
   fetchOrder,
   fetchProductAdminById,
