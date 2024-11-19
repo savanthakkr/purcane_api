@@ -3367,7 +3367,7 @@ const fetchbtocselll = async (req, res) => {
       FROM 
         daily_close_shop_quantity AS close
       INNER JOIN 
-        daily_open_shop_quantity AS open
+        dayli_open_shop_quantity AS open
       ON 
         close.ass_id = open.ass_id
       WHERE 
