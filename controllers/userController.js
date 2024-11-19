@@ -3359,14 +3359,12 @@ const fetchbtocselll = async (req, res) => {
     const productList = await sequelize.query(
       `
       SELECT 
-        close.id,
-        close.ass_id,
-        close.close_quantity,
-        open.open_quantity,
-        CAST((open.open_quantity - close.close_quantity) AS CHAR) AS remaining_quantity
+        close.*, -- Fetch all columns from daily_close_shop_quantity
+        open.open_quantity, -- Fetch open_quantity from daily_open_shop_quantity
+        CAST((open.open_quantity - close.close_quantity) AS CHAR) AS remaining_quantity -- Calculate and cast to string
       FROM 
         daily_close_shop_quantity AS close
-      INNER JOIN 
+      LEFT JOIN 
         dayli_open_shop_quantity AS open
       ON 
         close.ass_id = open.ass_id
@@ -3392,6 +3390,7 @@ const fetchbtocselll = async (req, res) => {
     });
   }
 };
+
 
 
 
