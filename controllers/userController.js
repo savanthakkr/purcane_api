@@ -3561,13 +3561,13 @@ const updateUserStatus = async (req, res) => {
 
 const fetchTotalCostShop = async (req, res) => {
   try {
-    const { todayDate } = req.body;
-    
+    const { startDate, endDate } = req.body; // Accepting startDate and endDate
+
     // First query to fetch shops data
     const allShops = await sequelize.query(
       'SELECT * FROM shops',
       {
-        type: QueryTypes.SELECT
+        type: QueryTypes.SELECT,
       }
     );
 
@@ -3583,21 +3583,21 @@ const fetchTotalCostShop = async (req, res) => {
              FROM dayli_open_shop_quantity dosq
              LEFT JOIN daily_close_shop_quantity dcsq 
              ON dosq.shop_id = dcsq.shop_id AND dosq.open_date = dcsq.close_date
-             WHERE dosq.shop_id = ? AND dosq.open_date = ?`,
+             WHERE dosq.shop_id = ? AND dosq.open_date BETWEEN ? AND ?`,
             {
-              replacements: [shopId, todayDate],
+              replacements: [shopId, startDate, endDate],
               type: QueryTypes.SELECT,
             }
           );
-          
+
           const variableCost = openQuantityData[0]?.variableCost || 0;
 
           // Fetch other expenses
           const otherExpenseData = await sequelize.query(
             `SELECT SUM(amount) AS otherExpense
              FROM btoc_expense 
-             WHERE shop_id = ? AND add_date = ?`,
-            { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
+             WHERE shop_id = ? AND add_date BETWEEN ? AND ?`,
+            { replacements: [shopId, startDate, endDate], type: QueryTypes.SELECT }
           );
           const otherExpense = otherExpenseData[0]?.otherExpense || 0;
 
@@ -3607,13 +3607,12 @@ const fetchTotalCostShop = async (req, res) => {
                 SUM(online) AS onlineTotal,
                 SUM(offline) AS offlineTotal
              FROM revenue
-             WHERE shop_name = ? AND date = ?`,
-            { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
+             WHERE shop_name = ? AND date BETWEEN ? AND ?`,
+            { replacements: [shopId, startDate, endDate], type: QueryTypes.SELECT }
           );
-          
+
           const onlineTotal = revenueData[0]?.onlineTotal || 0;
           const offlineTotal = revenueData[0]?.offlineTotal || 0;
-          
 
           // Return shop data along with calculated values for costs and revenue totals
           return {
@@ -3622,7 +3621,8 @@ const fetchTotalCostShop = async (req, res) => {
             otherExpense,
             onlineTotal,
             offlineTotal,
-            costDate: todayDate
+            startDate,
+            endDate,
           };
         })
       );
@@ -3630,24 +3630,24 @@ const fetchTotalCostShop = async (req, res) => {
       return res.status(200).send({
         error: false,
         message: 'Data Fetch Successfully',
-        DailyShopCost: shopDataWithQuantities
+        DailyShopCost: shopDataWithQuantities,
       });
     } else {
       return res.status(404).send({
         error: true,
         message: 'Data not found',
-        DailyShopCost: []
+        DailyShopCost: [],
       });
     }
-
   } catch (error) {
     console.log(error);
     res.status(500).send({
       message: 'Data not found',
-      error: true
+      error: true,
     });
   }
 };
+
 
 
 module.exports = {
