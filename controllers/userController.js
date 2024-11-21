@@ -3356,42 +3356,26 @@ const fetchbtocpurchase = async (req, res) => {
 
 const fetchbtocsell = async (req, res) => {
   try {
-    // Query to fetch all data and include the calculation
-    const productList = await sequelize.query(
-      `SELECT 
-         dc.id,
-         dc.ass_id,
-         dc.close_quantity,
-         do.open_quantity,
-         (do.open_quantity - dc.close_quantity) AS quantity_difference
-       FROM daily_close_shop_quantity dc
-       LEFT JOIN dayli_open_shop_quantity do ON dc.ass_id = do.ass_id
-       ORDER BY dc.id DESC`,
-      { type: QueryTypes.SELECT }
-    );
 
-    if (productList.length > 0) {
-      return res.status(200).send({
-        error: false,
-        message: 'Data Fetch Successfully',
-        SellData: productList,
-      });
+    const { ass_id} = req.body;
+
+    const productList = await sequelize.query('SELECT * FROM daily_close_shop_quantity WHERE ass_id = ? ORDER BY id DESC',
+      { replacements: [ass_id], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', SellData: productList });
     } else {
-      return res.status(404).send({
-        error: true,
-        message: 'No data found',
-        SellData: [],
-      });
+      return res.status(404).send({ error: true, message: 'Data not found', SellData: [] });
     }
+
   } catch (error) {
     console.log(error);
     res.status(500).send({
-      message: 'Internal Server Error',
-      error: true,
+      message: 'Data not found',
+      error: true
     });
   }
 };
-
 
 const fetchEmpDetails = async (req, res) => {
   try {
