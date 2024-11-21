@@ -3432,6 +3432,12 @@ const addclosingquantity = async (req, res) => {
 
     const {assign_id,shop_id,remainquantity,qunatity,closing_date } = req.body;
 
+    console.log(req.body);
+
+    console.log("close quantity");
+    
+    
+
     const existingClosing = await sequelize.query(
       'SELECT * FROM daily_close_shop_quantity WHERE ass_id = ? AND close_date = ?',
       {
