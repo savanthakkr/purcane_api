@@ -3370,6 +3370,8 @@ const fetchbtocsell = async (req, res) => {
          dosq.ass_id = dcsq.ass_id
        WHERE 
          dcsq.ass_id = ? 
+       GROUP BY 
+         dcsq.id
        ORDER BY 
          dcsq.id DESC`,
       {
@@ -3399,6 +3401,7 @@ const fetchbtocsell = async (req, res) => {
     });
   }
 };
+
 
 
 const fetchEmpDetails = async (req, res) => {
