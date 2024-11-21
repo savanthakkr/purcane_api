@@ -3354,7 +3354,7 @@ const fetchbtocpurchase = async (req, res) => {
 
 
 
-const fetchAllBtocSell = async (req, res) => {
+const fetchbtocsell = async (req, res) => {
   try {
     // Query to fetch all data and include the calculation
     const productList = await sequelize.query(
