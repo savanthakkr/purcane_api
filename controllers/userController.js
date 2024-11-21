@@ -3576,11 +3576,17 @@ const fetchTotalCostShop = async (req, res) => {
 
           // Fetch variable cost (sum of open_quantity * amount)
           const openQuantityData = await sequelize.query(
-            `SELECT SUM(open_quantity * amount) AS variableCost
-             FROM dayli_open_shop_quantity 
-             WHERE shop_id = ? AND open_date = ?`,
-            { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
+            `SELECT SUM((dosq.open_quantity - dcsq.close_quantity) * dosq.amount) AS variableCost
+             FROM dayli_open_shop_quantity dosq
+             LEFT JOIN daily_close_shop_quantity dcsq 
+             ON dosq.shop_id = dcsq.shop_id AND dosq.open_date = dcsq.close_date
+             WHERE dosq.shop_id = ? AND dosq.open_date = ?`,
+            {
+              replacements: [shopId, todayDate],
+              type: QueryTypes.SELECT,
+            }
           );
+          
           const variableCost = openQuantityData[0]?.variableCost || 0;
 
           // Fetch other expenses
