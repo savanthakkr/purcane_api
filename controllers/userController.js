@@ -3450,7 +3450,7 @@ const addclosingquantity = async (req, res) => {
       const result = await sequelize.query(
         'UPDATE assign_shop_product SET quantity = ? WHERE id = ?',
         {
-          replacements: [remainquantity,assign_id],
+          replacements: [qunatity,assign_id],
           type: QueryTypes.UPDATE
         }
       );
@@ -3458,7 +3458,7 @@ const addclosingquantity = async (req, res) => {
       const resultInsert = await sequelize.query(
         'INSERT INTO daily_close_shop_quantity (ass_id,shop_id,close_quantity,close_date) VALUES (?,?,?,?)',
         {
-          replacements: [assign_id,shop_id,qunatity,closing_date],
+          replacements: [assign_id,shop_id,remainquantity,closing_date],
           type: QueryTypes.INSERT
         }
       );
