@@ -3352,7 +3352,28 @@ const fetchbtocpurchase = async (req, res) => {
   }
 };
 
+const fetchbtocsell = async (req, res) => {
+  try {
 
+    const { ass_id} = req.body;
+
+    const productList = await sequelize.query('SELECT * FROM daily_close_shop_quantity WHERE ass_id = ? ORDER BY id DESC',
+      { replacements: [ass_id], type: QueryTypes.SELECT }); 
+
+    if(productList.length > 0){
+      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', SellData: productList });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found', SellData: [] });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Data not found',
+      error: true
+    });
+  }
+};
 
 // const fetchbtocsell = async (req, res) => {
 //   try {
