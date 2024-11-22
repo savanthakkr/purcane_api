@@ -3352,28 +3352,7 @@ const fetchbtocpurchase = async (req, res) => {
   }
 };
 
-const fetchbtocsell = async (req, res) => {
-  try {
 
-    const { ass_id} = req.body;
-
-    const productList = await sequelize.query('SELECT * FROM daily_close_shop_quantity WHERE ass_id = ? ORDER BY id DESC',
-      { replacements: [ass_id], type: QueryTypes.SELECT }); 
-
-    if(productList.length > 0){
-      return res.status(200).send({ error: false, message: 'Data Fetch Successfully', SellData: productList });
-    } else {
-      return res.status(404).send({ error: true, message: 'Data not found', SellData: [] });
-    }
-
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      message: 'Data not found',
-      error: true
-    });
-  }
-};
 
 // const fetchbtocsell = async (req, res) => {
 //   try {
@@ -3604,9 +3583,17 @@ const fetchTotalCostShop = async (req, res) => {
         allShops.map(async (shop) => {
           const shopId = shop.id;
 
+          // const openQuantityData = await sequelize.query(
+          //   `SELECT SUM(close_quantity * amount) AS variableCost
+          //    FROM dayli_open_shop_quantity 
+          //    WHERE shop_id = ? AND open_date = ?`,
+          //   { replacements: [shopId, todayDate], type: QueryTypes.SELECT }
+          // );
+          // const variableCost = openQuantityData[0]?.variableCost || 0;
+
           // Fetch variable cost (sum of open_quantity * amount)
           const openQuantityData = await sequelize.query(
-            `SELECT SUM((dosq.open_quantity - dcsq.close_quantity) * dosq.amount) AS variableCost
+            `SELECT SUM((dcsq.close_quantity) * dosq.amount) AS variableCost
              FROM dayli_open_shop_quantity dosq
              LEFT JOIN daily_close_shop_quantity dcsq 
              ON dosq.shop_id = dcsq.shop_id AND dosq.open_date = dcsq.close_date
