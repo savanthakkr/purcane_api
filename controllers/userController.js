@@ -3530,6 +3530,15 @@ const addopenquantity = async (req, res) => {
 
       return res.status(200).send({ error: false, message: 'Quantity Update Successfully' });
     } else {
+
+      await sequelize.query(
+        'UPDATE assign_shop_product SET quantity = ? WHERE id = ?',
+        {
+          replacements: [remainquantity, assign_id],
+          type: QueryTypes.UPDATE,
+        }
+      );
+
       // Update the existing record if it already exists
       const resultUpdate = await sequelize.query(
         'UPDATE dayli_open_shop_quantity SET open_quantity = ?, amount = ? WHERE ass_id = ? AND open_date = ?',
