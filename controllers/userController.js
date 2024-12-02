@@ -3499,46 +3499,57 @@ const addclosingquantity = async (req, res) => {
 
 const addopenquantity = async (req, res) => {
   try {
+    const { assign_id, shop_id, remainquantity, qunatity, closing_date, amount } = req.body;
 
-    const {assign_id,shop_id,remainquantity,qunatity,closing_date,amount } = req.body;
-
+    // Check if an entry already exists for the given assign_id and closing_date
     const existingClosing = await sequelize.query(
       'SELECT * FROM dayli_open_shop_quantity WHERE ass_id = ? AND open_date = ?',
       {
-        replacements: [assign_id,closing_date],
-        type: QueryTypes.SELECT
+        replacements: [assign_id, closing_date],
+        type: QueryTypes.SELECT,
       }
     );
 
     if (existingClosing.length === 0) {
-      const result = await sequelize.query(
+      // Insert a new record if no entry exists
+      await sequelize.query(
         'UPDATE assign_shop_product SET quantity = ? WHERE id = ?',
         {
-          replacements: [remainquantity,assign_id],
-          type: QueryTypes.UPDATE
+          replacements: [remainquantity, assign_id],
+          type: QueryTypes.UPDATE,
         }
       );
-  
-      const resultInsert = await sequelize.query(
-        'INSERT INTO dayli_open_shop_quantity (ass_id,shop_id,open_quantity,amount,open_date) VALUES (?,?,?,?,?)',
+
+      await sequelize.query(
+        'INSERT INTO dayli_open_shop_quantity (ass_id, shop_id, open_quantity, amount, open_date) VALUES (?,?,?,?,?)',
         {
-          replacements: [assign_id,shop_id,qunatity,amount,closing_date],
-          type: QueryTypes.INSERT
+          replacements: [assign_id, shop_id, qunatity, amount, closing_date],
+          type: QueryTypes.INSERT,
         }
       );
-  
-      return res.status(200).send({ error: false, message: 'Quantity Update Successfully'});
+
+      return res.status(200).send({ error: false, message: 'Quantity Update Successfully' });
     } else {
-      return res.status(400).send({ error: true, message: 'Today Quantity already updated'});
+      // Update the existing record if it already exists
+      const resultUpdate = await sequelize.query(
+        'UPDATE dayli_open_shop_quantity SET open_quantity = ?, amount = ? WHERE ass_id = ? AND open_date = ?',
+        {
+          replacements: [qunatity, amount, assign_id, closing_date],
+          type: QueryTypes.UPDATE,
+        }
+      );
+
+      return res.status(200).send({ error: false, message: 'Quantity Updated Successfully for Existing Record' });
     }
   } catch (error) {
     console.log(error);
     res.status(500).send({
       message: 'Data not updated',
-      error: true
+      error: true,
     });
   }
 };
+
 
 const fetchClosingQunatity = async (req, res) => {
   try {
