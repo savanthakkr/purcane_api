@@ -3510,16 +3510,17 @@ const addopenquantity = async (req, res) => {
       }
     );
 
+    // Update assign_shop_product in all cases
+    await sequelize.query(
+      'UPDATE assign_shop_product SET quantity = ? WHERE id = ?',
+      {
+        replacements: [remainquantity, assign_id],
+        type: QueryTypes.UPDATE,
+      }
+    );
+
     if (existingClosing.length === 0) {
       // Insert a new record if no entry exists
-      await sequelize.query(
-        'UPDATE assign_shop_product SET quantity = ? WHERE id = ?',
-        {
-          replacements: [remainquantity, assign_id],
-          type: QueryTypes.UPDATE,
-        }
-      );
-
       await sequelize.query(
         'INSERT INTO dayli_open_shop_quantity (ass_id, shop_id, open_quantity, amount, open_date) VALUES (?,?,?,?,?)',
         {
@@ -3528,22 +3529,19 @@ const addopenquantity = async (req, res) => {
         }
       );
 
-      return res.status(200).send({ error: false, message: 'Quantity Update Successfully' });
+      return res.status(200).send({ error: false, message: 'Quantity Updated Successfully' });
     } else {
+      // Fetch the existing quantity
+      const todayQuantity = existingClosing[0].open_quantity;
 
+      // Add the new quantity to the existing quantity
+      const updatedQuantity = parseFloat(todayQuantity) + parseFloat(qunatity);
+
+      // Update the existing record
       await sequelize.query(
-        'UPDATE assign_shop_product SET quantity = ? WHERE id = ?',
-        {
-          replacements: [remainquantity, assign_id],
-          type: QueryTypes.UPDATE,
-        }
-      );
-
-      // Update the existing record if it already exists
-      const resultUpdate = await sequelize.query(
         'UPDATE dayli_open_shop_quantity SET open_quantity = ?, amount = ? WHERE ass_id = ? AND open_date = ?',
         {
-          replacements: [qunatity, amount, assign_id, closing_date],
+          replacements: [updatedQuantity, amount, assign_id, closing_date],
           type: QueryTypes.UPDATE,
         }
       );
@@ -3551,13 +3549,14 @@ const addopenquantity = async (req, res) => {
       return res.status(200).send({ error: false, message: 'Quantity Updated Successfully for Existing Record' });
     }
   } catch (error) {
-    console.log(error);
+    console.error('Error in addopenquantity:', error);
     res.status(500).send({
       message: 'Data not updated',
       error: true,
     });
   }
 };
+
 
 
 const fetchClosingQunatity = async (req, res) => {
