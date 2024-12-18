@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const verifyToken = require('../middlewares/authMiddleware');
 const fs = require('fs');
 const path = require('path');
+const { Juspay, APIError } = require('expresscheckout-nodejs');
 
 const otpGenerator = require('otp-generator');
 const { broadcastMessage } = require('./soketController');
@@ -32,6 +33,24 @@ if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
+const config = require('../config/hdfcconfig.json');
+const publicKey = fs.readFileSync(config.PUBLIC_KEY_PATH);
+const privateKey = fs.readFileSync(config.PRIVATE_KEY_PATH);
+const paymentPageClientId = config.PAYMENT_PAGE_CLIENT_ID; // From config.json
+const SANDBOX_BASE_URL = "https://smartgatewayuat.hdfcbank.com";
+const PRODUCTION_BASE_URL = "https://smartgateway.hdfcbank.com"
+
+const juspay = new Juspay({
+    merchantId: config.MERCHANT_ID,
+    baseUrl: SANDBOX_BASE_URL,
+    jweAuth: {
+        keyId: config.KEY_UUID,
+        publicKey,
+        privateKey
+    }
+});
+
+
 const saveBase64File = (base64String, folderPath) => {
   // Check if the base64 string includes the prefix
   let matches = base64String.match(/^data:(.+);base64,(.+)$/);
@@ -55,9 +74,6 @@ const saveBase64File = (base64String, folderPath) => {
 
   return filePath; // return the file path for saving in the database
 };
-
-
-
 
 function AddMinutesToDate(date, minutes) {
   return new Date(date.getTime() + minutes * 60000);
@@ -3724,7 +3740,99 @@ WHERE
   }
 };
 
+// Create Juspay Order Session
+const createOrderSession = async (req, res) => {
+  const { userId, amount } = req.body;
+  const orderId = `order_${Date.now()}`;
+  const returnUrl = `${req.protocol}://${req.get('host')}/handleJuspayResponse`;
 
+  try {
+      const sessionResponse = await juspay.orderSession.create({
+          order_id: orderId,
+          amount: amount,
+          payment_page_client_id: paymentPageClientId,
+          customer_id: userId, // Use user ID as customer ID
+          action: 'paymentPage',
+          return_url: returnUrl,
+          currency: 'INR'
+      });
+
+      return res.status(200).send({
+          error: false,
+          message: 'Order session created successfully',
+          PaymentSession: sessionResponse
+      });
+  } catch (error) {
+      if (error instanceof APIError) {
+          console.error('Juspay API Error:', error.message);
+          return res.status(500).send({
+              error: true,
+              message: 'Failed to create order session',
+              details: error.message
+          });
+      }
+      return res.status(500).send({
+          error: true,
+          message: 'Unexpected error while creating order session'
+      });
+  }
+};
+
+// Handle Juspay Response
+const handleJuspayResponse = async (req, res) => {
+  const { order_id } = req.body;
+
+  if (!order_id) {
+      return res.status(400).send({
+          error: true,
+          message: 'Order ID is required'
+      });
+  }
+
+  try {
+      const statusResponse = await juspay.order.status(order_id);
+      const orderStatus = statusResponse.status;
+
+      let message = '';
+      switch (orderStatus) {
+          case 'CHARGED':
+              message = 'Order payment completed successfully';
+              break;
+          case 'PENDING':
+          case 'PENDING_VBV':
+              message = 'Order payment is pending';
+              break;
+          case 'AUTHORIZATION_FAILED':
+              message = 'Order payment authorization failed';
+              break;
+          case 'AUTHENTICATION_FAILED':
+              message = 'Order payment authentication failed';
+              break;
+          default:
+              message = `Order status: ${orderStatus}`;
+              break;
+      }
+
+      return res.status(200).send({
+          error: false,
+          message,
+          OrderStatus: statusResponse
+      });
+  } catch (error) {
+      if (error instanceof APIError) {
+          console.error('Juspay API Error:', error.message);
+          return res.status(500).send({
+              error: true,
+              message: 'Failed to fetch order status',
+              details: error.message
+          });
+      }
+      return res.status(500).send({
+          error: true,
+          message: 'Unexpected error while fetching order status'
+      });
+  }
+};
 
 module.exports = {
   login,
@@ -3818,5 +3926,7 @@ module.exports = {
   updateProduct,
   updateShopByID,
   fetchAllUsersbyType,
-  fetchTotalCostShop
+  fetchTotalCostShop,
+  createOrderSession,
+  handleJuspayResponse
 };
