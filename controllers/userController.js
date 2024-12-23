@@ -2404,11 +2404,11 @@ const deliverOrder = async (req, res) => {
         console.log(cartQuantity);
         console.log("cartQuantity");
         if (availableInventory < cartQuantity) {
-          newInventoryQuantity = 0;
-          totalPrice = 0; // Set inventory to 0 if it's less than the cart quantity
-        } else {
           newInventoryQuantity = availableInventory - cartQuantity;
           totalPrice = newInventoryQuantity * inventoryResult[0].base_price;
+        } else {
+          newInventoryQuantity = 0;
+          totalPrice = 0; // Set inventory to 0 if it's less than the cart quantity
         }
     
         // Step 5: Update the inventory with the new quantity
