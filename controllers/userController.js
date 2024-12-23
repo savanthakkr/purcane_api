@@ -2403,7 +2403,7 @@ const deliverOrder = async (req, res) => {
         console.log("availableInventory");
         console.log(cartQuantity);
         console.log("cartQuantity");
-        if (availableInventory < cartQuantity) {
+        if (cartQuantity < availableInventory) {
           newInventoryQuantity = availableInventory - cartQuantity;
           totalPrice = newInventoryQuantity * inventoryResult[0].base_price;
         } else {
