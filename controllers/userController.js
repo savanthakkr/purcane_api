@@ -2399,12 +2399,18 @@ const deliverOrder = async (req, res) => {
         res.status(200).json({ message: 'Order delivered and inventory updated!', error: false });
       } else {
         let newInventoryQuantity;
+        console.log(availableInventory);
+        console.log(newInventoryQuantity);
         if (availableInventory < cartQuantity) {
           newInventoryQuantity = 0;
           totalPrice = 0; // Set inventory to 0 if it's less than the cart quantity
         } else {
           newInventoryQuantity = availableInventory - cartQuantity;
           totalPrice = newInventoryQuantity * inventoryResult[0].base_price;
+          console.log(availableInventory);
+          console.log("availableInventory");
+          console.log(newInventoryQuantity);
+          console.log("newInventoryQuantity");
         }
     
         // Step 5: Update the inventory with the new quantity
