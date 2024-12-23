@@ -2403,8 +2403,12 @@ const deliverOrder = async (req, res) => {
         console.log("availableInventory");
         console.log(cartQuantity);
         console.log("cartQuantity");
-        if (cartQuantity < availableInventory) {
-          newInventoryQuantity = availableInventory - cartQuantity;
+        const cartQuantityNum = parseInt(cartQuantity, 10);
+        const availableInventoryNum = parseInt(availableInventory, 10);
+        if (cartQuantityNum < availableInventoryNum) {
+          newInventoryQuantity = availableInventoryNum - cartQuantityNum;
+          console.log("ifcondition");
+          
           totalPrice = newInventoryQuantity * inventoryResult[0].base_price;
         } else {
           newInventoryQuantity = 0;
@@ -2430,13 +2434,6 @@ const deliverOrder = async (req, res) => {
       }
   
     }
-
-    
-
-    // Step 3: Check if inventory quantity is sufficient, and update accordingly
-    
-    // Step 4: Subtract the quantity from inventory but ensure no negative values
-    
   } catch (error) {
     console.error('Error processing Update:', error);
     res.status(500).json({ message: 'Internal server error', error: true });
