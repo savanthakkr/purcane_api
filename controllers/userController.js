@@ -3139,6 +3139,35 @@ const createBtoCExpense = async (req, res) => {
     res.status(500).json({ error: true,message: 'Expense not added!!!' });
   }
 };
+const fetchB2CAllExpenses = async (req, res) => {
+  try {
+    // Fetch all expenses from the `btoc_expense` table
+    const expenseList = await sequelize.query(
+      'SELECT * FROM btoc_expense ORDER BY created_at DESC',
+      { type: QueryTypes.SELECT }
+    );
+
+    if (expenseList.length > 0) {
+      return res.status(200).send({
+        error: false,
+        message: 'Data Fetched Successfully',
+        Expenses: expenseList
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: 'No data found',
+        Expenses: []
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching expenses:', error);
+    res.status(500).send({
+      message: 'Internal server error',
+      error: true
+    });
+  }
+};
 
 const fetchExpensebyuser = async (req, res) => {
   try {
@@ -4013,6 +4042,7 @@ module.exports = {
   fetchbtocsell,
   updateUserStatus,
   fetchProductbyID,
+  fetchB2CAllExpenses,
   fetchShopByID,
   updateProduct,
   updateShopByID,

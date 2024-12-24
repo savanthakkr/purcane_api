@@ -28,6 +28,7 @@ const {addsellSugarcane,
     deleteUser,
     createInventory,
     AddRevenue,
+    fetchB2CAllExpenses,
     deleteProduct,
     fetchProductAdminById,
     fetchInventory,
@@ -57,6 +58,7 @@ router.get('/fetchsellSugarcaneAllData', fetchsellSugarcaneAllData);
 router.get('/fetchInventory', fetchInventory);
 router.get('/fetchAllRevenueDetails', fetchAllRevenueDetails);
 router.get('/fetchordersforadmin', fetchordersforadmin);
+router.get('/fetchB2CAllExpenses', fetchB2CAllExpenses);
 router.get('/fetchAllUsers', fetchAllUsers);
 router.post('/addPayment', addPayment);
 
