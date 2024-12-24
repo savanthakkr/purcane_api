@@ -1889,7 +1889,7 @@ const createPayment = async (req, res) => {
 const fetchordersforadmin = async (req, res) => {
   try {
 
-    const productList = await sequelize.query('SELECT orders.*,register.name as NAME,register.oNumber as OPHONE FROM orders INNER JOIN register ON orders.user_id = register.id ORDER BY orders.created_at DESC',
+    const productList = await sequelize.query('SELECT orders.*,register.name as NAME,register.oNumber as OPHONE FROM orders INNER JOIN register ON orders.user_id = register.id ORDER BY orders.o_Date DESC',
       { replacements: [], type: QueryTypes.SELECT }); 
 
     if(productList.length > 0){
@@ -2425,8 +2425,8 @@ const deliverOrder = async (req, res) => {
     
         // Step 6: Update the order status to 'delivered' (status = '2')
         await sequelize.query(
-          'UPDATE orders SET status = ? WHERE id = ?',
-          { replacements: ['2',oId], type: QueryTypes.UPDATE }
+          'UPDATE orders SET status = ?,created_at = ? WHERE id = ?',
+          { replacements: ['2', inventoryResult[0].created_at,oId], type: QueryTypes.UPDATE }
         );
     
         res.status(200).json({ message: 'Order delivered and inventory updated!', error: false });
