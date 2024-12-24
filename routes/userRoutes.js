@@ -27,6 +27,7 @@ const {addsellSugarcane,
     placeOrderByadmin,
     createInventory,
     AddRevenue,
+    deleteProduct,
     fetchProductAdminById,
     fetchInventory,
     fetchDeisleCost,fetchsellSugarcaneAllData,addPayment,fetchOrder, updateProductCart,placeOrder,deleteProductCart,fetchCartItems,addProductCart,loginUser,register,login,addCategory,fetchCategory,fetchCategorybyId,updateCategory,deleteCategory,fetchActiveCategory,addProduct,fetchProduct,
@@ -41,6 +42,7 @@ const {addsellSugarcane,
 
 router.post('/login', login);
 
+router.post('/deleteProduct', deleteProduct);
 router.post('/AddRevenue', AddRevenue);
 router.post('/fetchOrder', fetchOrder);
 router.post('/createInventory', createInventory);

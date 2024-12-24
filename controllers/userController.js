@@ -460,6 +460,38 @@ const addProduct = async (req, res) => {
     res.status(500).json({ error: true,message: 'Product not added!!!' });
   }
 };
+const deleteProduct = async (req, res) => {
+  try {
+    const { productId } = req.body;
+
+    // Check if the product exists
+    const existingProduct = await sequelize.query(
+      'SELECT * FROM product WHERE id = ?',
+      {
+        replacements: [productId],
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    if (existingProduct.length === 0) {
+      return res.status(404).json({ error: true, message: 'Product not found!!!' });
+    }
+
+    // Delete the product
+    await sequelize.query(
+      'DELETE FROM product WHERE id = ?',
+      {
+        replacements: [productId],
+        type: QueryTypes.DELETE,
+      }
+    );
+
+    res.status(200).json({ error: false, message: 'Product deleted successfully!!!' });
+  } catch (error) {
+    console.error('Error deleting product:', error); // Log the error
+    res.status(500).json({ error: true, message: 'Product not deleted!!!' });
+  }
+};
 
 const fetchProductAdmin = async (req, res) => {
   try {
@@ -3842,6 +3874,7 @@ module.exports = {
   fetchCartItems,
   UpdateView,
   addProductCart,
+  deleteProduct,
   fetchAllUsers,
   updateUserCart,
   placeOrderByadmin,
