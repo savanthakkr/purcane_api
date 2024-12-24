@@ -25,6 +25,7 @@ const {addsellSugarcane,
     fetchTotalAmount,createPayment,fetchPaymentHistory,
     addDeisleCost,
     placeOrderByadmin,
+    deleteUser,
     createInventory,
     AddRevenue,
     deleteProduct,
@@ -42,6 +43,7 @@ const {addsellSugarcane,
 
 router.post('/login', login);
 
+router.post('/deleteUser', deleteUser);
 router.post('/deleteProduct', deleteProduct);
 router.post('/AddRevenue', AddRevenue);
 router.post('/fetchOrder', fetchOrder);

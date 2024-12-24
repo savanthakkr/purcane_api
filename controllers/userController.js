@@ -2030,6 +2030,62 @@ const fetchAllUsers = async (req, res) => {
 };
 
 
+const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.body; // Assuming userId is passed in the request body
+
+    if (!userId) {
+      return res.status(400).send({
+        error: true,
+        message: 'User ID is required'
+      });
+    }
+
+    // Check if the user exists
+    const userExists = await sequelize.query(
+      'SELECT * FROM register WHERE id = ?',
+      {
+        replacements: [userId],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (userExists.length === 0) {
+      return res.status(404).send({
+        error: true,
+        message: 'User not found'
+      });
+    }
+
+    // Delete the user and related data
+    await sequelize.query('DELETE FROM orders WHERE user_id = ?', {
+      replacements: [userId],
+      type: QueryTypes.DELETE
+    });
+
+    await sequelize.query('DELETE FROM paymentdone WHERE user_id = ?', {
+      replacements: [userId],
+      type: QueryTypes.DELETE
+    });
+
+    await sequelize.query('DELETE FROM register WHERE id = ?', {
+      replacements: [userId],
+      type: QueryTypes.DELETE
+    });
+
+    return res.status(200).send({
+      error: false,
+      message: 'User and associated data deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).send({
+      error: true,
+      message: 'Internal server error'
+    });
+  }
+};
 
 
 const fetchOrdersAndPaymentsForAdmin = async (req, res) => {
@@ -3876,6 +3932,7 @@ module.exports = {
   addProductCart,
   deleteProduct,
   fetchAllUsers,
+  deleteUser,
   updateUserCart,
   placeOrderByadmin,
   updateProductCart,
