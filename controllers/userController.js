@@ -1336,7 +1336,85 @@ const fetchpurchaseSugarcane = async (req, res) => {
   }
 };
 
+const editPurchaseSugarcane = async (req, res) => {
+  try {
+    const { id, agent_name, amount, transaction_id, payment_mode, payment_date } = req.body;
 
+    // Validate required fields
+    if (!id || !agent_name || !amount || !transaction_id || !payment_mode || !payment_date) {
+      return res.status(400).send({
+        error: true,
+        message: "Invalid input: All fields are required."
+      });
+    }
+
+    // Construct the query
+    const query = `UPDATE purchase_sugarcane SET agent_name = :agent_name, amount = :amount, transaction_id = :transaction_id, payment_mode = :payment_mode, payment_date = :payment_date, updated_at = NOW() WHERE id = :id`;
+
+    const [result] = await sequelize.query(query, {
+      replacements: { id, agent_name, amount, transaction_id, payment_mode, payment_date },
+      type: QueryTypes.UPDATE
+    });
+
+    if (result) {
+      return res.status(200).send({
+        error: false,
+        message: "Purchase sugarcane details updated successfully."
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: "Purchase sugarcane record not found."
+      });
+    }
+  } catch (error) {
+    console.error("Error updating purchase sugarcane details:", error);
+    res.status(500).send({
+      error: true,
+      message: "An error occurred while updating purchase sugarcane details."
+    });
+  }
+};
+
+const editSellSugarcane = async (req, res) => {
+  try {
+    const { id, farmer_name, weight, rate, v_name, driver_name, amount } = req.body;
+
+    // Validate required fields
+    if (!id || !farmer_name || !weight || !rate || !v_name || !driver_name || !amount) {
+      return res.status(400).send({
+        error: true,
+        message: "Invalid input: All fields are required."
+      });
+    }
+
+    // Construct the query
+    const query = `UPDATE sell_sugarcane SET farmer_name = :farmer_name, weight = :weight, rate = :rate, v_name = :v_name, driver_name = :driver_name, amount = :amount, updated_at = NOW() WHERE id = :id`;
+
+    const [result] = await sequelize.query(query, {
+      replacements: { id, farmer_name, weight, rate, v_name, driver_name, amount },
+      type: QueryTypes.UPDATE
+    });
+
+    if (result) {
+      return res.status(200).send({
+        error: false,
+        message: "Sell sugarcane details updated successfully."
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: "Sell sugarcane record not found."
+      });
+    }
+  } catch (error) {
+    console.error("Error updating sell sugarcane details:", error);
+    res.status(500).send({
+      error: true,
+      message: "An error occurred while updating sell sugarcane details."
+    });
+  }
+};
 
 
 const addsellTransportcost = async (req, res) => {
@@ -4068,6 +4146,7 @@ module.exports = {
   createAttendance,
   fetchattendancbyuser,
   fetchattendancuserbyDate,
+  editPurchaseSugarcane,
   createLeaves,
   fetchleavebyuser,
   fetchleaveuserbyDate,
@@ -4079,6 +4158,7 @@ module.exports = {
   assignProducttoShop,
   updateassignProducttoShop,
   fetchAllAssignShopProduct,
+  editSellSugarcane,
   employeelogin,
   fetchEmpDetails,
   fetchAllAssignUser,

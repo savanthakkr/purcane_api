@@ -15,6 +15,7 @@ const {addsellSugarcane,
     fetchpurchaseTransportCost,
     adddailyWages,
     fetchdailyWages,
+    editPurchaseSugarcane,
     fetchProductAdmin,
     updateUserCart,
     fetchAllUsers,
@@ -28,6 +29,7 @@ const {addsellSugarcane,
     deleteUser,
     editAdminPayment,
     createInventory,
+    editSellSugarcane,
     AddRevenue,
     fetchB2CAllExpenses,
     deleteProduct,
@@ -87,6 +89,8 @@ router.post('/addProduct', addProduct);
 router.post('/fetchProduct', fetchProduct);
 router.get('/fetchActiveProduct', fetchActiveProduct);
 router.post('/addsellSugarcane', addsellSugarcane);
+router.post('/editPurchaseSugarcane', editPurchaseSugarcane);
+router.post('/editSellSugarcane', editSellSugarcane);
 router.get('/fetchsellSugarcane', fetchsellSugarcane);
 router.post('/addpurchaseSugarcane', addpurchaseSugarcane);
 router.get('/fetchpurchaseSugarcane/:farmerName', fetchpurchaseSugarcane);
