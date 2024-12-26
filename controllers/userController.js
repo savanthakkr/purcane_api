@@ -1338,10 +1338,10 @@ const fetchpurchaseSugarcane = async (req, res) => {
 
 const editPurchaseSugarcane = async (req, res) => {
   try {
-    const { id, agent_name, amount, transaction_id, payment_mode, payment_date } = req.body;
+    const { id, amount, transaction_id, payment_mode } = req.body;
 
     // Validate required fields
-    if (!id || !agent_name || !amount || !transaction_id || !payment_mode || !payment_date) {
+    if (!id || !amount || !transaction_id || !payment_mode) {
       return res.status(400).send({
         error: true,
         message: "Invalid input: All fields are required."
@@ -1349,10 +1349,10 @@ const editPurchaseSugarcane = async (req, res) => {
     }
 
     // Construct the query
-    const query = `UPDATE purchase_sugarcane SET agent_name = :agent_name, amount = :amount, transaction_id = :transaction_id, payment_mode = :payment_mode, payment_date = :payment_date, updated_at = NOW() WHERE id = :id`;
+    const query = `UPDATE purchase_sugarcane SET amount = :amount, transaction_id = :transaction_id, payment_mode = :payment_mode, updated_at = NOW() WHERE id = :id`;
 
     const [result] = await sequelize.query(query, {
-      replacements: { id, agent_name, amount, transaction_id, payment_mode, payment_date },
+      replacements: { id, amount, transaction_id, payment_mode },
       type: QueryTypes.UPDATE
     });
 
@@ -1378,10 +1378,10 @@ const editPurchaseSugarcane = async (req, res) => {
 
 const editSellSugarcane = async (req, res) => {
   try {
-    const { id, farmer_name, weight, rate, v_name, driver_name, amount } = req.body;
+    const { id, weight, rate, amount } = req.body;
 
     // Validate required fields
-    if (!id || !farmer_name || !weight || !rate || !v_name || !driver_name || !amount) {
+    if (!id || !weight || !rate || !amount) {
       return res.status(400).send({
         error: true,
         message: "Invalid input: All fields are required."
@@ -1389,10 +1389,10 @@ const editSellSugarcane = async (req, res) => {
     }
 
     // Construct the query
-    const query = `UPDATE sell_sugarcane SET farmer_name = :farmer_name, weight = :weight, rate = :rate, v_name = :v_name, driver_name = :driver_name, amount = :amount, updated_at = NOW() WHERE id = :id`;
+    const query = `UPDATE sell_sugarcane SET weight = :weight, rate = :rate, amount = :amount, updated_at = NOW() WHERE id = :id`;
 
     const [result] = await sequelize.query(query, {
-      replacements: { id, farmer_name, weight, rate, v_name, driver_name, amount },
+      replacements: { id, weight, rate, amount },
       type: QueryTypes.UPDATE
     });
 
