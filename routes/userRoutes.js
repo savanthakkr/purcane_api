@@ -26,6 +26,7 @@ const {addsellSugarcane,
     addDeisleCost,
     placeOrderByadmin,
     deleteUser,
+    editAdminPayment,
     createInventory,
     AddRevenue,
     fetchB2CAllExpenses,
@@ -61,6 +62,7 @@ router.get('/fetchordersforadmin', fetchordersforadmin);
 router.get('/fetchB2CAllExpenses', fetchB2CAllExpenses);
 router.get('/fetchAllUsers', fetchAllUsers);
 router.post('/addPayment', addPayment);
+router.post('/editAdminPayment', editAdminPayment);
 
 router.post('/fetchOrdersAndPaymentsForAdmin', fetchOrdersAndPaymentsForAdmin);
 router.post('/createPayment', createPayment);

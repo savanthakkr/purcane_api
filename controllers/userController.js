@@ -1948,6 +1948,51 @@ const fetchordersforadmin = async (req, res) => {
     });
   }
 };
+
+const editAdminPayment = async (req, res) => {
+  try {
+    const { paymentId, amount } = req.body;
+
+    // Validate required fields
+    if (!paymentId || amount == null) {
+      return res.status(400).send({
+        error: true,
+        message: "Invalid input: paymentId and amount are required."
+      });
+    }
+
+    // Update query
+    const query = `UPDATE paymentdone SET amount = :amount, updated_at = NOW() WHERE id = :paymentId`;
+
+    const [result] = await sequelize.query(query, {
+      replacements: {
+        paymentId,
+        amount
+      },
+      type: QueryTypes.UPDATE
+    });
+
+    if (result) {
+      return res.status(200).send({
+        error: false,
+        message: "Payment amount updated successfully."
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: "Payment record not found."
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      error: true,
+      message: "An error occurred while updating payment amount."
+    });
+  }
+};
+
 const fetchAdminPayments = async (req, res) => {
   try {
 
@@ -4006,6 +4051,7 @@ module.exports = {
   deliverOrder,
   fetchAdminPayments,
   fetchAdminHomeData,
+  editAdminPayment,
   createExpences,
   fetchExpences,
   fetchProfile,
