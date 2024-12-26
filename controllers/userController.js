@@ -1281,6 +1281,7 @@ const fetchpurchaseSugarcane = async (req, res) => {
     dateMap.forEach((value, key) => {
       const purchaseEntry = value.purchase || {
         source: 'purchase',
+        id: null,
         name: null,
         agent_name_sell: null,
         weight: null,
@@ -1297,6 +1298,7 @@ const fetchpurchaseSugarcane = async (req, res) => {
 
       const paymentMadeEntry = value.payment_made || {
         source: 'payment_made',
+        id: null,
         name: null,
         agent_name_sell: null,
         weight: null,
