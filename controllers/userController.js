@@ -1964,7 +1964,7 @@ const editAdminPayment = async (req, res) => {
     // Update query
     const query = `UPDATE paymentdone SET amount = :amount, updated_at = NOW() WHERE id = :paymentId`;
 
-    const [result] = await sequelize.query(query, {
+    const result = await sequelize.query(query, {
       replacements: {
         paymentId,
         amount
