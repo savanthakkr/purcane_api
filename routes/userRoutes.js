@@ -32,7 +32,7 @@ const {addsellSugarcane,
     editSellSugarcane,
     AddRevenue,
     fetchB2CAllExpenses,
-    editRegister.
+    editRegister,
     deleteProduct,
     fetchProductAdminById,
     fetchInventory,
