@@ -2076,6 +2076,58 @@ const fetchAdminPayments = async (req, res) => {
     });
   }
 };
+const editRegister = async (req, res) => {
+  try {
+    const { id, name, nName, oNumber, eNumber, landmark, block, password, type } = req.body;
+
+    // Validate required fields
+    if (!id || !name || !nName || !oNumber || !eNumber || !landmark || !block || !password || !type) {
+      return res.status(400).send({
+        error: true,
+        message: "Invalid input: All fields are required."
+      });
+    }
+
+    // Update query for the register table
+    const query = `
+      UPDATE register 
+      SET 
+        name = :name, 
+        nName = :nName, 
+        oNumber = :oNumber, 
+        eNumber = :eNumber, 
+        landmark = :landmark, 
+        block = :block, 
+        password = :password, 
+        type = :type,
+        updated_at = NOW() 
+      WHERE id = :id
+    `;
+
+    const [result] = await sequelize.query(query, {
+      replacements: { id, name, nName, oNumber, eNumber, landmark, block, password, type },
+      type: QueryTypes.UPDATE
+    });
+
+    if (result) {
+      return res.status(200).send({
+        error: false,
+        message: "Register details updated successfully."
+      });
+    } else {
+      return res.status(404).send({
+        error: true,
+        message: "Register record not found."
+      });
+    }
+  } catch (error) {
+    console.error("Error updating register details:", error);
+    res.status(500).send({
+      error: true,
+      message: "An error occurred while updating register details."
+    });
+  }
+};
 
 const fetchAllUsers = async (req, res) => {
   try {
@@ -4101,6 +4153,7 @@ module.exports = {
   fetchsellSugarcane,
   addPayment,
   addpurchaseSugarcane,
+  editRegister,
   fetchpurchaseSugarcane,
   addopenquantity,
   addsellTransportcost,
