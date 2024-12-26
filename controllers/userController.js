@@ -1972,17 +1972,12 @@ const editAdminPayment = async (req, res) => {
       type: QueryTypes.UPDATE
     });
 
-    if (result) {
+    
       return res.status(200).send({
         error: false,
         message: "Payment amount updated successfully."
       });
-    } else {
-      return res.status(404).send({
-        error: true,
-        message: "Payment record not found."
-      });
-    }
+    
 
   } catch (error) {
     console.log(error);
