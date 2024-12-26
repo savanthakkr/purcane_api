@@ -1355,22 +1355,15 @@ const editPurchaseSugarcane = async (req, res) => {
     // Construct the query
     const query = `UPDATE purchase_sugarcane SET amount = :amount, transaction_id = :transaction_id, payment_mode = :payment_mode, updated_at = NOW() WHERE id = :id`;
 
-    const [result] = await sequelize.query(query, {
+    const result = await sequelize.query(query, {
       replacements: { id, amount, transaction_id, payment_mode },
       type: QueryTypes.UPDATE
     });
 
-    if (result) {
-      return res.status(200).send({
-        error: false,
-        message: "Purchase sugarcane details updated successfully."
-      });
-    } else {
-      return res.status(404).send({
-        error: true,
-        message: "Purchase sugarcane record not found."
-      });
-    }
+    return res.status(200).send({
+      error: false,
+      message: "Purchase sugarcane details updated successfully."
+    });
   } catch (error) {
     console.error("Error updating purchase sugarcane details:", error);
     res.status(500).send({
@@ -1395,22 +1388,15 @@ const editSellSugarcane = async (req, res) => {
     // Construct the query
     const query = `UPDATE sell_sugarcane SET weight = :weight, rate = :rate, amount = :amount, updated_at = NOW() WHERE id = :id`;
 
-    const [result] = await sequelize.query(query, {
+    const result = await sequelize.query(query, {
       replacements: { id, weight, rate, amount },
       type: QueryTypes.UPDATE
     });
 
-    if (result) {
-      return res.status(200).send({
-        error: false,
-        message: "Sell sugarcane details updated successfully."
-      });
-    } else {
-      return res.status(404).send({
-        error: true,
-        message: "Sell sugarcane record not found."
-      });
-    }
+    return res.status(200).send({
+      error: false,
+      message: "Sell sugarcane details updated successfully."
+    });
   } catch (error) {
     console.error("Error updating sell sugarcane details:", error);
     res.status(500).send({
