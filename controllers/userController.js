@@ -2104,22 +2104,15 @@ const editRegister = async (req, res) => {
       WHERE id = :id
     `;
 
-    const [result] = await sequelize.query(query, {
+    const result = await sequelize.query(query, {
       replacements: { id, name, nName, oNumber, eNumber, landmark, block, password, type },
       type: QueryTypes.UPDATE
     });
 
-    if (result) {
-      return res.status(200).send({
-        error: false,
-        message: "Register details updated successfully."
-      });
-    } else {
-      return res.status(404).send({
-        error: true,
-        message: "Register record not found."
-      });
-    }
+    return res.status(200).send({
+      error: false,
+      message: "Register details updated successfully."
+    });
   } catch (error) {
     console.error("Error updating register details:", error);
     res.status(500).send({
