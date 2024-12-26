@@ -1199,8 +1199,9 @@ const fetchpurchaseSugarcane = async (req, res) => {
     // Fetch data from the purchase_sugarcane table
     const purchaseData = await sequelize.query(`
       SELECT 
-        'payment_made' AS source, 
-        agent_name AS name, 
+        'payment_made' AS source,  
+        id AS id, 
+        agent_name AS name,
         NULL AS agent_name_sell, 
         NULL AS weight, 
         NULL AS rate, 
@@ -1223,6 +1224,7 @@ const fetchpurchaseSugarcane = async (req, res) => {
     const sellData = await sequelize.query(
       `SELECT 
         'purchase' AS source, 
+        id AS id, 
         farmer_name AS name, 
         agent_name AS agent_name_sell, 
         weight, 
