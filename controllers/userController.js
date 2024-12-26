@@ -3185,7 +3185,7 @@ const fetchB2CAllExpenses = async (req, res) => {
     const expenseList = await sequelize.query(
       `SELECT 
          btoc_expense.*, 
-         shops.name AS shop_name 
+         shops.shop_name AS shop_name 
        FROM btoc_expense 
        LEFT JOIN shops ON btoc_expense.shop_id = shops.id 
        ORDER BY btoc_expense.created_at DESC`,
