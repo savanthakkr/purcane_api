@@ -3181,9 +3181,14 @@ const createBtoCExpense = async (req, res) => {
 };
 const fetchB2CAllExpenses = async (req, res) => {
   try {
-    // Fetch all expenses from the `btoc_expense` table
+    // Fetch all expenses along with shop name from the `btoc_expense` table
     const expenseList = await sequelize.query(
-      'SELECT * FROM btoc_expense ORDER BY created_at DESC',
+      `SELECT 
+         btoc_expense.*, 
+         shops.name AS shop_name 
+       FROM btoc_expense 
+       LEFT JOIN shops ON btoc_expense.shop_id = shops.id 
+       ORDER BY btoc_expense.created_at DESC`,
       { type: QueryTypes.SELECT }
     );
 
@@ -3208,6 +3213,7 @@ const fetchB2CAllExpenses = async (req, res) => {
     });
   }
 };
+
 
 const fetchExpensebyuser = async (req, res) => {
   try {
