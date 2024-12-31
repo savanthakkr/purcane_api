@@ -1856,7 +1856,38 @@ const fetchdailyWages = async (req, res) => {
     });
   }
 };
+const deleteDailyWages = async (req, res) => {
+  const { id } = req.body;  // Assuming you're passing the ID in the URL
 
+  if (!id) {
+    return res.status(400).send({
+      error: true,
+      message: 'Missing required fields'
+    });
+  }
+
+  try {
+    const deletedWage = await sequelize.query(
+      `DELETE FROM dailey_wages WHERE id = :id`,
+      {
+        replacements: { id },
+        type: QueryTypes.DELETE
+      }
+    );
+
+    if (deletedWage[0] > 0) {
+      return res.status(200).send({ error: false, message: 'Data deleted successfully' });
+    } else {
+      return res.status(404).send({ error: true, message: 'Data not found to delete' });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      message: 'Error deleting data',
+      error: true
+    });
+  }
+};
 const addDeisleCost = async (req, res) => {
   try {
     const { v_number,d_name,d_amount,bill,payment_mode } = req.body;
@@ -4253,6 +4284,7 @@ module.exports = {
   fetchShopdetails,
   fetchAllRevenueDetails,
   createAttendance,
+  deleteDailyWages,
   fetchattendancbyuser,
   fetchattendancuserbyDate,
   editPurchaseSugarcane,

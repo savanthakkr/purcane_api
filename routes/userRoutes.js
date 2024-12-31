@@ -35,6 +35,7 @@ const {addsellSugarcane,
     editpurchaseTransportCost,
     editSellTransportCost,
     editRegister,
+    deleteDailyWages,
     deleteProduct,
     fetchProductAdminById,
     fetchInventory,
@@ -50,6 +51,7 @@ const {addsellSugarcane,
 
 router.post('/login', login);
 
+router.post('/deleteDailyWages', deleteDailyWages);
 router.post('/editSellTransportCost', editSellTransportCost);
 router.post('/editpurchaseTransportCost', editpurchaseTransportCost);
 router.post('/editRegister', editRegister);
