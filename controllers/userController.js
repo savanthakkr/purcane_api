@@ -2812,6 +2812,24 @@ const deliverOrder = async (req, res) => {
 
 
 
+const DeleteRevenue = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const result = await sequelize.query('DELETE FROM revenue WHERE id = ?',
+      { replacements: [id], type: QueryTypes.DELETE }); 
+
+      return res.status(200).send({ error: false, message: 'Other revenue Deleted Successfully'});
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Other revenue not found',
+      error: true
+    });
+  }
+};
+
 const deleteExpences = async (req, res) => {
   try {
     const { id } = req.body;
@@ -4267,6 +4285,7 @@ module.exports = {
   fetchAllUsers,
   deleteUser,
   deleteExpences,
+  DeleteRevenue,
   updateUserCart,
   placeOrderByadmin,
   updateProductCart,
