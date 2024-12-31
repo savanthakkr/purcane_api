@@ -1670,7 +1670,71 @@ const fetchpurchaseTransportCost = async (req, res) => {
     });
   }
 };
+const editpurchaseTransportCost = async (req, res) => {
+  try {
+    const { id, amount, transaction_id, payment_mode } = req.body;
 
+    // Validate required fields
+    if (!id || !amount || !transaction_id || !payment_mode) {
+      return res.status(400).send({
+        error: true,
+        message: "Invalid input: All fields are required."
+      });
+    }
+
+    // Construct the query
+    const query = `UPDATE transportcost_purchase SET amount = :amount, transaction_id = :transaction_id, payment_mode = :payment_mode, updated_at = NOW() WHERE id = :id`;
+
+    const result = await sequelize.query(query, {
+      replacements: { id, amount, transaction_id, payment_mode },
+      type: QueryTypes.UPDATE
+    });
+
+    return res.status(200).send({
+      error: false,
+      message: "Purchase sugarcane details updated successfully."
+    });
+  } catch (error) {
+    console.error("Error updating purchase sugarcane details:", error);
+    res.status(500).send({
+      error: true,
+      message: "An error occurred while updating purchase sugarcane details."
+    });
+  }
+};
+
+const editSellTransportCost = async (req, res) => {
+  try {
+    const { id, weight, rate, amount } = req.body;
+
+    // Validate required fields
+    if (!id || !weight || !rate || !amount) {
+      return res.status(400).send({
+        error: true,
+        message: "Invalid input: All fields are required."
+      });
+    }
+
+    // Construct the query
+    const query = `UPDATE transportcost_sell SET weight = :weight, rate = :rate, amount = :amount, updated_at = NOW() WHERE id = :id`;
+
+    const result = await sequelize.query(query, {
+      replacements: { id, weight, rate, amount },
+      type: QueryTypes.UPDATE
+    });
+
+    return res.status(200).send({
+      error: false,
+      message: "Sell sugarcane details updated successfully."
+    });
+  } catch (error) {
+    console.error("Error updating sell sugarcane details:", error);
+    res.status(500).send({
+      error: true,
+      message: "An error occurred while updating sell sugarcane details."
+    });
+  }
+};
 const fetchpurchaseTransportCostAll = async (req, res) => {
   try {
 
@@ -4198,6 +4262,8 @@ module.exports = {
   employeelogin,
   fetchEmpDetails,
   fetchAllAssignUser,
+  editpurchaseTransportCost,
+  editSellTransportCost,
   addclosingquantity,
   fetchClosingQunatity,
   UpdateRevenue,

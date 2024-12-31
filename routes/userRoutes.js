@@ -32,6 +32,8 @@ const {addsellSugarcane,
     editSellSugarcane,
     AddRevenue,
     fetchB2CAllExpenses,
+    editpurchaseTransportCost,
+    editSellTransportCost,
     editRegister,
     deleteProduct,
     fetchProductAdminById,
@@ -48,6 +50,8 @@ const {addsellSugarcane,
 
 router.post('/login', login);
 
+router.post('/editSellTransportCost', editSellTransportCost);
+router.post('/editpurchaseTransportCost', editpurchaseTransportCost);
 router.post('/editRegister', editRegister);
 router.post('/deleteUser', deleteUser);
 router.post('/deleteProduct', deleteProduct);
