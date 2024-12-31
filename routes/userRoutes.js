@@ -36,6 +36,7 @@ const {addsellSugarcane,
     editSellTransportCost,
     DeleteSell,
     DeleteRevenue,
+    DeletePurchase,
     editRegister,
     deleteDeisleCost,
     deleteExpences,
@@ -56,6 +57,7 @@ const {addsellSugarcane,
 router.post('/login', login);
 
 router.post('/DeleteSell', DeleteSell);
+router.post('/DeletePurchase', DeletePurchase);
 
 router.post('/DeleteRevenue', DeleteRevenue);
 router.post('/deleteExpences', deleteExpences);
