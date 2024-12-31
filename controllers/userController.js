@@ -2811,7 +2811,23 @@ const deliverOrder = async (req, res) => {
 };
 
 
+const DeleteShopProduct = async (req, res) => {
+  try {
+    const { id } = req.body;
 
+    const result = await sequelize.query('DELETE FROM shop_product WHERE id = ?',
+      { replacements: [id], type: QueryTypes.DELETE }); 
+
+      return res.status(200).send({ error: false, message: 'Product Deleted Successfully'});
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
 const DeletePurchase = async (req, res) => {
   try {
     const { id } = req.body;
@@ -2819,12 +2835,12 @@ const DeletePurchase = async (req, res) => {
     const result = await sequelize.query('DELETE FROM dayli_open_shop_quantity WHERE id = ?',
       { replacements: [id], type: QueryTypes.DELETE }); 
 
-      return res.status(200).send({ error: false, message: 'Sell Deleted Successfully'});
+      return res.status(200).send({ error: false, message: 'Purchase Deleted Successfully'});
 
   } catch (error) {
     console.log(error);
     res.status(500).send({
-      message: 'Sell not found',
+      message: 'Purchase not found',
       error: true
     });
   }
@@ -4324,6 +4340,7 @@ module.exports = {
   DeleteSell,
   placeOrderByadmin,
   DeletePurchase,
+  DeleteShopProduct,
   updateProductCart,
   deleteProductCart,
   fetchordersforadmin,
