@@ -2914,7 +2914,7 @@ const DeletePurchase = async (req, res) => {
 
     // Step 1: Fetch the quantity and ass_id from dayli_open_shop_quantity table
     const purchase = await sequelize.query(
-      'SELECT quantity, ass_id FROM dayli_open_shop_quantity WHERE id = ?',
+      'SELECT open_quantity, ass_id FROM dayli_open_shop_quantity WHERE id = ?',
       { replacements: [id], type: QueryTypes.SELECT }
     );
 
@@ -2922,22 +2922,15 @@ const DeletePurchase = async (req, res) => {
       return res.status(404).send({ error: true, message: 'Purchase not found' });
     }
 
-    const { quantity, ass_id } = purchase[0];
+    const { open_quantity, ass_id } = purchase[0];
 
-    // Step 2: Subtract the quantity from open_quantity in dayli_open_shop_quantity
-    await sequelize.query(
-      `UPDATE dayli_open_shop_quantity
-       SET open_quantity = open_quantity - ?
-       WHERE id = ?`,
-      { replacements: [quantity, id], type: QueryTypes.UPDATE }
-    );
 
     // Step 3: Subtract the quantity from the assign_shop_product table
     await sequelize.query(
       `UPDATE assign_shop_product
        SET quantity = quantity - ?
        WHERE id = ?`,
-      { replacements: [quantity, ass_id], type: QueryTypes.UPDATE }
+      { replacements: [open_quantity, ass_id], type: QueryTypes.UPDATE }
     );
 
     // Step 4: Delete the record from dayli_open_shop_quantity table
