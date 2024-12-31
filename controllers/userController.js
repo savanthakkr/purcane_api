@@ -3596,12 +3596,6 @@ const fetchleaveuserbyDate = async (req, res) => {
 const editBtoCExpense = async (req, res) => {
   const { id, reason, amount } = req.body;
 
-  if (!shop_id) {
-    return res.status(400).json({
-      error: true,
-      message: 'Shop ID are required to update the expense',
-    });
-  }
 
   try {
     // Check if the expense exists for the given shop_id and userid
