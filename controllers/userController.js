@@ -1537,6 +1537,7 @@ const fetchpurchaseTransportCost = async (req, res) => {
     const purchaseData = await sequelize.query(`
       SELECT 
         'payment_made' AS source, 
+        id AS id, 
         agent_name AS name, 
         NULL AS wieght, 
         NULL AS rate, 
@@ -1559,6 +1560,7 @@ const fetchpurchaseTransportCost = async (req, res) => {
     const sellData = await sequelize.query(
       `SELECT 
         'purchase' AS source, 
+        id AS id, 
         agent_name AS name, 
         wieght, 
         rate, 
@@ -1614,6 +1616,7 @@ const fetchpurchaseTransportCost = async (req, res) => {
     dateMap.forEach((value, key) => {
       const purchaseEntry = value.purchase || {
         source: 'purchase',
+        id: null,
         name: null,
         agent_name_sell: null,
         weight: null,
@@ -1630,6 +1633,7 @@ const fetchpurchaseTransportCost = async (req, res) => {
 
       const paymentMadeEntry = value.payment_made || {
         source: 'payment_made',
+        id: id,
         name: null,
         agent_name_sell: null,
         weight: null,
