@@ -1964,6 +1964,37 @@ const addDeisleCost = async (req, res) => {
     res.status(500).json({ error: true,message: 'Data not added!!!' });
   }
 };
+const updateDieselCost = async (req, res) => {
+  const {id, v_number, d_name, d_amount, payment_mode } = req.body;
+
+  // Check for missing required fields
+  if (!id) {
+    return res.status(400).json({
+      error: true,
+      message: 'ID is required to update the record',
+    });
+  }
+
+  try {
+    const result = await sequelize.query(
+      `UPDATE diesel_cost 
+       SET v_number = ?, 
+           d_name = ?, 
+           d_amount = ?, 
+           payment_mode = ? 
+       WHERE id = ?`,
+      {
+        replacements: [v_number, d_name, d_amount, payment_mode, id],
+        type: QueryTypes.UPDATE,
+      }
+    );
+
+    return res.status(200).json({ error: false, message: 'Updated successfully!!!' });
+  } catch (error) {
+    console.error('Error updating diesel cost:', error);
+    res.status(500).json({ error: true, message: 'Data not updated!!!' });
+  }
+};
 
 const fetchDeisleCost = async (req, res) => {
   try {
@@ -4443,6 +4474,7 @@ module.exports = {
   fetchUserPaymentHistory,
   shopregister,
   updateShop,
+  updateDieselCost,
   fetchShops,
   assignUsertoShop,
   fetchShopdetails,

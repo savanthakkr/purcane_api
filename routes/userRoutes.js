@@ -42,6 +42,7 @@ const {addsellSugarcane,
     editRegister,
     DeleteShopExpenses,
     deleteDeisleCost,
+    updateDieselCost,
     deleteExpences,
     deleteDailyWages,
     deleteProduct,
@@ -58,8 +59,9 @@ const {addsellSugarcane,
  } = userController; 
 
 router.post('/login', login);
-
+updateDieselCost
 router.post('/updateDailyWages', updateDailyWages);
+router.post('/updateDieselCost', updateDieselCost);
 
 router.post('/DeleteShopExpenses', DeleteShopExpenses);
 router.post('/DeleteShopProduct', DeleteShopProduct);
