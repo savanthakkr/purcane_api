@@ -1875,11 +1875,7 @@ const deleteDailyWages = async (req, res) => {
       }
     );
 
-    if (deletedWage[0] > 0) {
-      return res.status(200).send({ error: false, message: 'Data deleted successfully' });
-    } else {
-      return res.status(404).send({ error: true, message: 'Data not found to delete' });
-    }
+    return res.status(200).send({ error: false, message: 'Data deleted successfully' });
   } catch (error) {
     console.log(error);
     return res.status(500).send({
