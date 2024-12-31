@@ -1633,7 +1633,7 @@ const fetchpurchaseTransportCost = async (req, res) => {
 
       const paymentMadeEntry = value.payment_made || {
         source: 'payment_made',
-        id: id,
+        id: null,
         name: null,
         agent_name_sell: null,
         weight: null,
