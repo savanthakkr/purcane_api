@@ -1764,6 +1764,37 @@ const fetchpurchaseTransportCostAll = async (req, res) => {
     });
   }
 };
+const updateDailyWages = async (req, res) => {
+  const {id, no_or_labour, wage_rate, total_amount, payment_made, payment_mode } = req.body;
+
+  if (!id) {
+    return res.status(400).json({
+      error: true,
+      message: 'ID is required to update the record'
+    });
+  }
+
+  try {
+    const result = await sequelize.query(
+      `UPDATE dailey_wages 
+       SET no_or_labour = ?, 
+           wage_rate = ?, 
+           total_amount = ?, 
+           payment_made = ?, 
+           payment_mode = ? 
+       WHERE id = ?`,
+      {
+        replacements: [no_or_labour, wage_rate, total_amount, payment_made, payment_mode, id],
+        type: QueryTypes.UPDATE
+      }
+    );
+
+    return res.status(200).json({ error: false, message: 'Updated successfully!!!' });
+  } catch (error) {
+    console.error('Error updating data:', error);
+    res.status(500).json({ error: true, message: 'Data not updated!!!' });
+  }
+};
 
 const adddailyWages = async (req, res) => {
   try {
@@ -2818,12 +2849,12 @@ const DeleteShopExpenses = async (req, res) => {
     const result = await sequelize.query('DELETE FROM btoc_expense WHERE id = ?',
       { replacements: [id], type: QueryTypes.DELETE }); 
 
-      return res.status(200).send({ error: false, message: 'Product Deleted Successfully'});
+      return res.status(200).send({ error: false, message: 'Expenses Deleted Successfully'});
 
   } catch (error) {
     console.log(error);
     res.status(500).send({
-      message: 'Product not found',
+      message: 'Expenses not found',
       error: true
     });
   }
@@ -4391,6 +4422,7 @@ module.exports = {
   fetchpurchaseTransportCost,
   adddailyWages,
   fetchdailyWages,
+  updateDailyWages,
   AddRevenue,
   addDeisleCost,
   fetchDeisleCost,
