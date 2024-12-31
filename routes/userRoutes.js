@@ -59,7 +59,6 @@ const {addsellSugarcane,
  } = userController; 
 
 router.post('/login', login);
-updateDieselCost
 router.post('/updateDailyWages', updateDailyWages);
 router.post('/updateDieselCost', updateDieselCost);
 
