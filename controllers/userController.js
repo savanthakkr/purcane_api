@@ -1674,6 +1674,8 @@ const editpurchaseTransportCost = async (req, res) => {
   try {
     const { id, amount, transaction_id, payment_mode } = req.body;
 
+    console.log(req.body);
+
     // Validate required fields
     if (!id || !amount || !transaction_id || !payment_mode) {
       return res.status(400).send({
@@ -1706,6 +1708,9 @@ const editpurchaseTransportCost = async (req, res) => {
 const editSellTransportCost = async (req, res) => {
   try {
     const { id, weight, rate, amount } = req.body;
+
+    console.log(req.body);
+    
 
     // Validate required fields
     if (!id || !weight || !rate || !amount) {
