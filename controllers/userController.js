@@ -2811,6 +2811,23 @@ const deliverOrder = async (req, res) => {
 };
 
 
+const DeleteShopExpenses = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const result = await sequelize.query('DELETE FROM btoc_expense WHERE id = ?',
+      { replacements: [id], type: QueryTypes.DELETE }); 
+
+      return res.status(200).send({ error: false, message: 'Product Deleted Successfully'});
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Product not found',
+      error: true
+    });
+  }
+};
 const DeleteShopProduct = async (req, res) => {
   try {
     const { id } = req.body;
@@ -4341,6 +4358,7 @@ module.exports = {
   placeOrderByadmin,
   DeletePurchase,
   DeleteShopProduct,
+  DeleteShopExpenses,
   updateProductCart,
   deleteProductCart,
   fetchordersforadmin,
