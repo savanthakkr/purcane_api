@@ -34,6 +34,7 @@ const {addsellSugarcane,
     fetchB2CAllExpenses,
     editpurchaseTransportCost,
     editSellTransportCost,
+    DeleteSell,
     DeleteRevenue,
     editRegister,
     deleteDeisleCost,
@@ -53,6 +54,8 @@ const {addsellSugarcane,
  } = userController; 
 
 router.post('/login', login);
+
+router.post('/DeleteSell', DeleteSell);
 
 router.post('/DeleteRevenue', DeleteRevenue);
 router.post('/deleteExpences', deleteExpences);

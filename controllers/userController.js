@@ -2812,6 +2812,24 @@ const deliverOrder = async (req, res) => {
 
 
 
+
+const DeleteSell = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const result = await sequelize.query('DELETE FROM daily_close_shop_quantity WHERE id = ?',
+      { replacements: [id], type: QueryTypes.DELETE }); 
+
+      return res.status(200).send({ error: false, message: 'Sell Deleted Successfully'});
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Sell not found',
+      error: true
+    });
+  }
+};
 const DeleteRevenue = async (req, res) => {
   try {
     const { id } = req.body;
@@ -4287,6 +4305,7 @@ module.exports = {
   deleteExpences,
   DeleteRevenue,
   updateUserCart,
+  DeleteSell,
   placeOrderByadmin,
   updateProductCart,
   deleteProductCart,
