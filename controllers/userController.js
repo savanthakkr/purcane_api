@@ -2814,10 +2814,10 @@ const deliverOrder = async (req, res) => {
 
 const deleteExpences = async (req, res) => {
   try {
-    const { cId } = req.body;
+    const { id } = req.body;
 
     const result = await sequelize.query('DELETE FROM otherexpenses WHERE id = ?',
-      { replacements: [cId], type: QueryTypes.DELETE }); 
+      { replacements: [id], type: QueryTypes.DELETE }); 
 
       return res.status(200).send({ error: false, message: 'Other Expenses Deleted Successfully'});
 
