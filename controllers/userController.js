@@ -3593,6 +3593,51 @@ const fetchleaveuserbyDate = async (req, res) => {
     });
   }
 };
+const editBtoCExpense = async (req, res) => {
+  const { id, reason, amount } = req.body;
+
+  if (!shop_id) {
+    return res.status(400).json({
+      error: true,
+      message: 'Shop ID are required to update the expense',
+    });
+  }
+
+  try {
+    // Check if the expense exists for the given shop_id and userid
+    const existingExpense = await sequelize.query(
+      'SELECT * FROM btoc_expense WHERE id = ?',
+      {
+        replacements: [id],
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    if (existingExpense.length === 0) {
+      return res.status(404).json({
+        error: true,
+        message: 'Expense not found for the provided Shop ID and User ID',
+      });
+    }
+
+    // Update the expense
+    const result = await sequelize.query(
+      `UPDATE btoc_expense 
+       SET reason = ?, 
+           amount = ? 
+       WHERE id = ?`,
+      {
+        replacements: [reason, amount, id],
+        type: QueryTypes.UPDATE,
+      }
+    );
+
+    res.status(200).json({ error: false, message: 'Expense updated successfully' });
+  } catch (error) {
+    console.error('Error updating expense:', error); // Log the error
+    res.status(500).json({ error: true, message: 'Internal server error' });
+  }
+};
 
 const createBtoCExpense = async (req, res) => {
   try {
@@ -4575,6 +4620,7 @@ module.exports = {
   addShopProduct,
   editShopProduct,
   updateShopProduct,
+  editBtoCExpense,
   fetchAllShopProduct,
   assignProducttoShop,
   updateassignProducttoShop,
