@@ -3681,6 +3681,58 @@ const fetchExpensebyuser = async (req, res) => {
     });
   }
 };
+const editShopProduct = async (req, res) => {
+  const {id, p_name, p_image, p_desc } = req.body;
+
+  if (!id) {
+    return res.status(400).json({
+      error: true,
+      message: 'ID is required to update the product',
+    });
+  }
+
+  try {
+    // Check if the product exists
+    const existingProduct = await sequelize.query(
+      'SELECT * FROM shop_product WHERE id = ?',
+      {
+        replacements: [id],
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    if (existingProduct.length === 0) {
+      return res.status(404).json({
+        error: true,
+        message: 'Product not found!!!',
+      });
+    }
+
+    // Handle optional image update
+    let imagePath = existingProduct[0].p_image; // Retain the existing image path
+    if (p_image) {
+      imagePath = saveBase64File(p_image, 'uploads');
+    }
+
+    // Update the product details
+    const result = await sequelize.query(
+      `UPDATE shop_product 
+       SET p_name = ?, 
+           p_image = ?, 
+           p_desc = ? 
+       WHERE id = ?`,
+      {
+        replacements: [p_name, imagePath, p_desc, id],
+        type: QueryTypes.UPDATE,
+      }
+    );
+
+    res.status(200).json({ error: false, message: 'Product updated successfully!!!' });
+  } catch (error) {
+    console.error('Error updating product:', error); // Log the error
+    res.status(500).json({ error: true, message: 'Internal server error' });
+  }
+};
 
 const addShopProduct = async (req, res) => {
   try {
@@ -4521,6 +4573,7 @@ module.exports = {
   createBtoCExpense,
   fetchExpensebyuser,
   addShopProduct,
+  editShopProduct,
   updateShopProduct,
   fetchAllShopProduct,
   assignProducttoShop,
