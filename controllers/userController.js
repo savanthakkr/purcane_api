@@ -3009,6 +3009,35 @@ const fetchExpences = async (req, res) => {
     });
   }
 };
+const editExpenses = async (req, res) => {
+  const {id, name, amount } = req.body; // Fields to update
+
+  // Validate input
+  if (!id) {
+    return res.status(400).json({
+      error: true,
+      message: 'ID is required to update the record',
+    });
+  }
+
+  try {
+    const result = await sequelize.query(
+      `UPDATE otherexpenses 
+       SET name = ?, 
+           amount = ? 
+       WHERE id = ?`,
+      {
+        replacements: [name, amount, id],
+        type: QueryTypes.UPDATE,
+      }
+    );
+
+    return res.status(200).json({ error: false, message: 'Expense updated successfully!' });
+  } catch (error) {
+    console.error('Error updating expenses:', error);
+    res.status(500).json({ error: true, message: 'Internal server error' });
+  }
+};
 
 const createExpences = async (req, res) => {
   const { quantity,total_amount } = req.body;
@@ -4467,6 +4496,7 @@ module.exports = {
   fetchAdminHomeData,
   editAdminPayment,
   createExpences,
+  editExpenses,
   fetchExpences,
   fetchProfile,
   updateProfile,
