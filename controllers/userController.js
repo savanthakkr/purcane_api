@@ -1725,7 +1725,7 @@ const editSellTransportCost = async (req, res) => {
     }
 
     // Construct the query
-    const query = `UPDATE transportcost_sell SET weight = :weight, rate = :rate, amount = :amount, updated_at = NOW() WHERE id = :id`;
+    const query = `UPDATE transportcost_sell SET wieght = :weight, rate = :rate, amount = :amount, updated_at = NOW() WHERE id = :id`;
 
     const result = await sequelize.query(query, {
       replacements: { id, weight, rate, amount },
