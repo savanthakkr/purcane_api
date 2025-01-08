@@ -3348,7 +3348,7 @@ const fetchAllRevenueDetails = async (req, res) => {
       SELECT revenue.*, shops.shop_name, shops.owner_mobile
       FROM revenue
       JOIN shops ON revenue.shop_name = shops.id
-      ORDER BY revenue.date DESC
+      ORDER BY STR_TO_DATE(revenue.date, '%d-%m-%Y') DESC
     `, {
       type: QueryTypes.SELECT
     });
