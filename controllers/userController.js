@@ -4420,6 +4420,10 @@ WHERE
           const onlineTotal = revenueData[0]?.onlineTotal || 0;
           const offlineTotal = revenueData[0]?.offlineTotal || 0;
 
+          console.log(onlineTotal);
+          console.log(offlineTotal);
+          
+
           // Return shop data along with calculated values for costs and revenue totals
           return {
             ...shop,
