@@ -2878,9 +2878,9 @@ const deliverOrder = async (req, res) => {
   try {
     // Fetch order details
     const cartResult = await sequelize.query(
-      `SELECT cart.product_id, cart.quantity, products.base_price
+      `SELECT cart.product_id, cart.quantity, product.base_price
        FROM cart
-       INNER JOIN products ON cart.product_id = products.id
+       INNER JOIN product ON cart.product_id = product.id
        WHERE cart.order_id = ?`,
       { replacements: [oId], type: QueryTypes.SELECT }
     );
