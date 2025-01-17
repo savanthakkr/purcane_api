@@ -2781,18 +2781,106 @@ const fetchProductAdminById = async (req, res) => {
   }
 };
 
+// const deliverOrder = async (req, res) => {
+//   const { oId } = req.body;
+
+//   try {
+//     // Get yesterday's date in YYYY-MM-DD format
+//     const yesterday = new Date();
+//     yesterday.setDate(yesterday.getDate() - 1);
+
+//     // Fetch order details
+//     const cartResult = await sequelize.query(
+//       `SELECT cart.product_id, cart.quantity
+//        FROM cart
+//        WHERE cart.order_id = ?`,
+//       { replacements: [oId], type: QueryTypes.SELECT }
+//     );
+
+//     if (cartResult.length === 0) {
+//       return res.status(404).json({ message: 'Order not found in cart', error: true });
+//     }
+
+//     const { product_id, quantity: cartQuantity } = cartResult[0];
+
+//     // Find the most recent inventory record prior to yesterday
+//     const inventoryResult = await sequelize.query(
+//       `SELECT inventory.quantity, inventory.base_price, inventory.created_at
+//        FROM inventory
+//        WHERE inventory.product_id = ?
+//        AND DATE(inventory.created_at) <= ?
+//        ORDER BY DATE(inventory.created_at) DESC
+//        LIMIT 1`,
+//       { replacements: [product_id, yesterday.toISOString().split('T')[0]], type: QueryTypes.SELECT }
+//     );
+
+//     if (inventoryResult.length === 0) {
+//       await sequelize.query(
+//         'UPDATE orders SET status = ? WHERE id = ?',
+//         { replacements: ['2', oId], type: QueryTypes.UPDATE }
+//       );
+
+//       return res.status(200).json({ message: 'Order delivered, no inventory adjustments needed.', error: false });
+//     }
+
+//     let availableInventory = inventoryResult[0].quantity;
+//     let totalPrice = 0;
+
+//     if (availableInventory <= 0) {
+//       await sequelize.query(
+//         'UPDATE orders SET status = ? WHERE id = ?',
+//         { replacements: ['2', oId], type: QueryTypes.UPDATE }
+//       );
+
+//       return res.status(200).json({ message: 'Order delivered, inventory exhausted.', error: false });
+//     }
+
+//     const cartQuantityNum = parseInt(cartQuantity, 10);
+//     const availableInventoryNum = parseInt(availableInventory, 10);
+//     let newInventoryQuantity;
+
+//     if (cartQuantityNum <= availableInventoryNum) {
+//       newInventoryQuantity = availableInventoryNum - cartQuantityNum;
+//       totalPrice = newInventoryQuantity * inventoryResult[0].base_price;
+//     } else {
+//       newInventoryQuantity = 0;
+//       totalPrice = 0;
+//     }
+
+//     // Correcting the created_at handling
+//     const createdAtDate = inventoryResult[0].created_at instanceof Date
+//       ? inventoryResult[0].created_at.toISOString().split('T')[0]
+//       : inventoryResult[0].created_at;
+
+//     await sequelize.query(
+//       `UPDATE inventory
+//        SET quantity = ?, total_amount = ?
+//        WHERE product_id = ? AND DATE(created_at) = ?`,
+//       { replacements: [newInventoryQuantity, totalPrice, product_id, createdAtDate], type: QueryTypes.UPDATE }
+//     );
+
+//     await sequelize.query(
+//       'UPDATE orders SET status = ? WHERE id = ?',
+//       { replacements: ['2', oId], type: QueryTypes.UPDATE }
+//     );
+
+//     res.status(200).json({ message: 'Order delivered and inventory updated!', error: false });
+//   } catch (error) {
+//     console.error('Error processing Update:', error);
+//     res.status(500).json({ message: 'Internal server error', error: true });
+//   }
+// };
+
+
 const deliverOrder = async (req, res) => {
   const { oId } = req.body;
 
   try {
-    // Get yesterday's date in YYYY-MM-DD format
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
     // Fetch order details
     const cartResult = await sequelize.query(
-      `SELECT cart.product_id, cart.quantity
+      `SELECT cart.product_id, cart.quantity, products.base_price
        FROM cart
+       INNER JOIN products ON cart.product_id = products.id
        WHERE cart.order_id = ?`,
       { replacements: [oId], type: QueryTypes.SELECT }
     );
@@ -2801,77 +2889,27 @@ const deliverOrder = async (req, res) => {
       return res.status(404).json({ message: 'Order not found in cart', error: true });
     }
 
-    const { product_id, quantity: cartQuantity } = cartResult[0];
+    // Calculate total amount
+    const totalAmount = cartResult.reduce((total, item) => {
+      return total + item.quantity * item.base_price;
+    }, 0);
 
-    // Find the most recent inventory record prior to yesterday
-    const inventoryResult = await sequelize.query(
-      `SELECT inventory.quantity, inventory.base_price, inventory.created_at
-       FROM inventory
-       WHERE inventory.product_id = ?
-       AND DATE(inventory.created_at) <= ?
-       ORDER BY DATE(inventory.created_at) DESC
-       LIMIT 1`,
-      { replacements: [product_id, yesterday.toISOString().split('T')[0]], type: QueryTypes.SELECT }
-    );
-
-    if (inventoryResult.length === 0) {
-      await sequelize.query(
-        'UPDATE orders SET status = ? WHERE id = ?',
-        { replacements: ['2', oId], type: QueryTypes.UPDATE }
-      );
-
-      return res.status(200).json({ message: 'Order delivered, no inventory adjustments needed.', error: false });
-    }
-
-    let availableInventory = inventoryResult[0].quantity;
-    let totalPrice = 0;
-
-    if (availableInventory <= 0) {
-      await sequelize.query(
-        'UPDATE orders SET status = ? WHERE id = ?',
-        { replacements: ['2', oId], type: QueryTypes.UPDATE }
-      );
-
-      return res.status(200).json({ message: 'Order delivered, inventory exhausted.', error: false });
-    }
-
-    const cartQuantityNum = parseInt(cartQuantity, 10);
-    const availableInventoryNum = parseInt(availableInventory, 10);
-    let newInventoryQuantity;
-
-    if (cartQuantityNum <= availableInventoryNum) {
-      newInventoryQuantity = availableInventoryNum - cartQuantityNum;
-      totalPrice = newInventoryQuantity * inventoryResult[0].base_price;
-    } else {
-      newInventoryQuantity = 0;
-      totalPrice = 0;
-    }
-
-    // Correcting the created_at handling
-    const createdAtDate = inventoryResult[0].created_at instanceof Date
-      ? inventoryResult[0].created_at.toISOString().split('T')[0]
-      : inventoryResult[0].created_at;
-
-    await sequelize.query(
-      `UPDATE inventory
-       SET quantity = ?, total_amount = ?
-       WHERE product_id = ? AND DATE(created_at) = ?`,
-      { replacements: [newInventoryQuantity, totalPrice, product_id, createdAtDate], type: QueryTypes.UPDATE }
-    );
-
+    // Update order status to delivered
     await sequelize.query(
       'UPDATE orders SET status = ? WHERE id = ?',
       { replacements: ['2', oId], type: QueryTypes.UPDATE }
     );
 
-    res.status(200).json({ message: 'Order delivered and inventory updated!', error: false });
+    res.status(200).json({
+      message: 'Order delivered successfully!',
+      totalAmount,
+      error: false,
+    });
   } catch (error) {
-    console.error('Error processing Update:', error);
+    console.error('Error processing delivery:', error);
     res.status(500).json({ message: 'Internal server error', error: true });
   }
 };
-
-
 
 
 const DeleteShopExpenses = async (req, res) => {
