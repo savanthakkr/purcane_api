@@ -2852,12 +2852,12 @@ const deliverOrder = async (req, res) => {
       ? inventoryResult[0].created_at.toISOString().split('T')[0]
       : inventoryResult[0].created_at;
 
-    await sequelize.query(
-      `UPDATE inventory
-       SET quantity = ?, total_amount = ?
-       WHERE product_id = ? AND DATE(created_at) = ?`,
-      { replacements: [newInventoryQuantity, totalPrice, product_id, createdAtDate], type: QueryTypes.UPDATE }
-    );
+    // await sequelize.query(
+    //   `UPDATE inventory
+    //    SET quantity = ?, total_amount = ?
+    //    WHERE product_id = ? AND DATE(created_at) = ?`,
+    //   { replacements: [newInventoryQuantity, totalPrice, product_id, createdAtDate], type: QueryTypes.UPDATE }
+    // );
 
     await sequelize.query(
       'UPDATE orders SET status = ? WHERE id = ?',
@@ -2871,8 +2871,24 @@ const deliverOrder = async (req, res) => {
   }
 };
 
+//todo: delete inventory
+const DeleteInventory = async (req, res) => {
+  try {
+    const { id } = req.body;
 
+    const result = await sequelize.query('DELETE FROM inventory WHERE id = ?',
+      { replacements: [id], type: QueryTypes.DELETE }); 
 
+      return res.status(200).send({ error: false, message: 'Inventory Deleted Successfully'});
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Inventory not deleted',
+      error: true
+    });
+  }
+};
 
 const DeleteShopExpenses = async (req, res) => {
   try {
@@ -2952,6 +2968,27 @@ const DeletePurchase = async (req, res) => {
 const DeleteSell = async (req, res) => {
   try {
     const { id } = req.body;
+
+    // Step 1: Fetch the quantity and ass_id from dayli_open_shop_quantity table
+    const purchase = await sequelize.query(
+      'SELECT close_quantity, ass_id FROM daily_close_shop_quantity WHERE id = ?',
+      { replacements: [id], type: QueryTypes.SELECT }
+    );
+
+    if (purchase.length === 0) {
+      return res.status(404).send({ error: true, message: 'Purchase not found' });
+    }
+
+    const { close_quantity, ass_id } = purchase[0];
+
+
+    // Step 3: Subtract the quantity from the assign_shop_product table
+    await sequelize.query(
+      `UPDATE assign_shop_product
+       SET quantity = quantity + ?
+       WHERE id = ?`,
+      { replacements: [close_quantity, ass_id], type: QueryTypes.UPDATE }
+    );
 
     const result = await sequelize.query('DELETE FROM daily_close_shop_quantity WHERE id = ?',
       { replacements: [id], type: QueryTypes.DELETE }); 
@@ -4065,7 +4102,7 @@ const fetchbtocpurchase = async (req, res) => {
 
     const { ass_id} = req.body;
 
-    const productList = await sequelize.query('SELECT * FROM dayli_open_shop_quantity WHERE ass_id = ? ORDER BY id DESC',
+    const productList = await sequelize.query('SELECT dayli_open_shop_quantity.*,assign_shop_product.p_id as PID,assign_shop_product.amount as SAMOUNT,shop_product.p_name,shops.shop_name FROM dayli_open_shop_quantity INNER JOIN assign_shop_product ON dayli_open_shop_quantity.ass_id = assign_shop_product.id INNER JOIN shop_product ON assign_shop_product.p_id = shop_product.id INNER JOIN shops ON shops.id = dayli_open_shop_quantity.shop_id WHERE dayli_open_shop_quantity.ass_id = ? ORDER BY dayli_open_shop_quantity.id DESC',
       { replacements: [ass_id], type: QueryTypes.SELECT }); 
 
     if(productList.length > 0){
@@ -4088,7 +4125,7 @@ const fetchbtocsell = async (req, res) => {
 
     const { ass_id} = req.body;
 
-    const productList = await sequelize.query('SELECT * FROM daily_close_shop_quantity WHERE ass_id = ? ORDER BY id DESC',
+    const productList = await sequelize.query('SELECT daily_close_shop_quantity.*,assign_shop_product.p_id as PID,assign_shop_product.amount as SAMOUNT,shop_product.p_name,shops.shop_name FROM daily_close_shop_quantity INNER JOIN assign_shop_product ON daily_close_shop_quantity.ass_id = assign_shop_product.id INNER JOIN shop_product ON assign_shop_product.p_id = shop_product.id INNER JOIN shops ON shops.id = daily_close_shop_quantity.shop_id WHERE daily_close_shop_quantity.ass_id = ? ORDER BY daily_close_shop_quantity.id DESC',
       { replacements: [ass_id], type: QueryTypes.SELECT }); 
 
     if(productList.length > 0){
@@ -4460,6 +4497,140 @@ WHERE
 };
 
 // Create Juspay Order Session
+
+// const fetchTotalCostShop = async (req, res) => {
+//   try {
+//     const { startDate, endDate } = req.body; // Accepting startDate and endDate
+
+//     // First query to fetch shops data
+//     const allShops = await sequelize.query(
+//       'SELECT * FROM shops',
+//       {
+//         type: QueryTypes.SELECT,
+//       }
+//     );
+
+//     if (allShops.length > 0) {
+//       // Use Promise.all to execute additional queries for each shop
+//       const shopDataWithQuantities = await Promise.all(
+//         allShops.map(async (shop) => {
+//           const shopId = shop.id;
+
+//           // Fetch variable cost grouped by date
+//           const openQuantityData = await sequelize.query(
+//             `SELECT 
+//                 CSHOP.close_date AS date,
+//                 SUM(CSHOP.close_quantity * COALESCE(OSHOP.amount, PREV.amount)) AS variableCost
+//              FROM 
+//                 daily_close_shop_quantity AS CSHOP
+//              LEFT JOIN 
+//                 dayli_open_shop_quantity AS OSHOP 
+//                 ON CSHOP.ass_id = OSHOP.ass_id 
+//                 AND CSHOP.close_date = OSHOP.open_date
+//              LEFT JOIN (
+//                 SELECT 
+//                     ass_id, 
+//                     MAX(open_date) AS latest_date, 
+//                     amount
+//                 FROM 
+//                     dayli_open_shop_quantity
+//                 WHERE 
+//                     open_date < ?
+//                 GROUP BY 
+//                     ass_id
+//              ) AS PREV
+//              ON CSHOP.ass_id = PREV.ass_id
+//              WHERE 
+//                 CSHOP.shop_id = ?
+//                 AND CSHOP.close_date BETWEEN ? AND ?
+//              GROUP BY 
+//                 CSHOP.close_date`,
+//             {
+//               replacements: [endDate, shopId, startDate, endDate],
+//               type: QueryTypes.SELECT,
+//             }
+//           );
+
+//           // Fetch other expenses grouped by date
+//           const otherExpenseData = await sequelize.query(
+//             `SELECT 
+//                 add_date AS date, 
+//                 SUM(amount) AS otherExpense
+//              FROM 
+//                 btoc_expense 
+//              WHERE 
+//                 shop_id = ? 
+//                 AND add_date BETWEEN ? AND ?
+//              GROUP BY 
+//                 add_date`,
+//             { replacements: [shopId, startDate, endDate], type: QueryTypes.SELECT }
+//           );
+
+//           // Fetch revenue data grouped by date
+//           const revenueData = await sequelize.query(
+//             `SELECT 
+//                 date AS date, 
+//                 SUM(online) AS onlineTotal,
+//                 SUM(offline) AS offlineTotal
+//              FROM 
+//                 revenue
+//              WHERE 
+//                 shop_name = ? 
+//                 AND date BETWEEN ? AND ?
+//              GROUP BY 
+//                 date`,
+//             { replacements: [shopId, startDate, endDate], type: QueryTypes.SELECT }
+//           );
+
+//           // Combine all data grouped by date
+//           const dateWiseData = {};
+//           [...openQuantityData, ...otherExpenseData, ...revenueData].forEach((record) => {
+//             const date = record.date;
+//             if (!dateWiseData[date]) {
+//               dateWiseData[date] = {
+//                 date,
+//                 variableCost: 0,
+//                 otherExpense: 0,
+//                 onlineTotal: 0,
+//                 offlineTotal: 0,
+//               };
+//             }
+//             if (record.variableCost !== undefined) dateWiseData[date].variableCost = record.variableCost;
+//             if (record.otherExpense !== undefined) dateWiseData[date].otherExpense = record.otherExpense;
+//             if (record.onlineTotal !== undefined) dateWiseData[date].onlineTotal = record.onlineTotal;
+//             if (record.offlineTotal !== undefined) dateWiseData[date].offlineTotal = record.offlineTotal;
+//           });
+
+//           // Return shop data with date-wise breakdown
+//           return {
+//             ...shop,
+//             dateWiseData: Object.values(dateWiseData), // Convert object to array
+//           };
+//         })
+//       );
+
+//       return res.status(200).send({
+//         error: false,
+//         message: 'Data Fetch Successfully',
+//         DailyShopCost: shopDataWithQuantities,
+//       });
+//     } else {
+//       return res.status(404).send({
+//         error: true,
+//         message: 'Data not found',
+//         DailyShopCost: [],
+//       });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       message: 'Data not found',
+//       error: true,
+//     });
+//   }
+// };
+
+
 const createOrderSession = async (req, res) => {
   const { userId, amount } = req.body;
   const orderId = `order_${Date.now()}`;
@@ -4669,5 +4840,6 @@ module.exports = {
   fetchAllUsersbyType,
   fetchTotalCostShop,
   createOrderSession,
-  handleJuspayResponse
+  handleJuspayResponse,
+  DeleteInventory
 };
