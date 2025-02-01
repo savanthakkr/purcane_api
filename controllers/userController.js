@@ -2591,7 +2591,23 @@ const updateUserCart = async (req, res) => {
   }
 };
 
+const DeletebtobOrder = async (req, res) => {
+  try {
+    const { id } = req.body;
 
+    const result = await sequelize.query('DELETE FROM orders WHERE id = ?',
+      { replacements: [id], type: QueryTypes.DELETE }); 
+
+      return res.status(200).send({ error: false, message: 'Order Deleted Successfully'});
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: 'Inventory not deleted',
+      error: true
+    });
+  }
+};
 
 const fetchAllUsersbyType = async (req, res) => {
   try {
@@ -4403,38 +4419,49 @@ const fetchTotalCostShop = async (req, res) => {
 
           
           // Fetch variable cost (sum of open_quantity * amount)
-          const openQuantityData = await sequelize.query(
-            `SELECT 
-    SUM(CSHOP.close_quantity * COALESCE(OSHOP.amount, PREV.amount)) AS variableCost
-FROM 
-    daily_close_shop_quantity AS CSHOP
-LEFT JOIN 
-    dayli_open_shop_quantity AS OSHOP 
-    ON CSHOP.ass_id = OSHOP.ass_id 
-    AND CSHOP.close_date = OSHOP.open_date
-LEFT JOIN (
-    SELECT 
-        ass_id, 
-        MAX(open_date) AS latest_date, 
-        amount
-    FROM 
-        dayli_open_shop_quantity
-    WHERE 
-        open_date < ? -- Fetch previous data before the range start
-    GROUP BY 
-        ass_id
-) AS PREV
-ON CSHOP.ass_id = PREV.ass_id
-WHERE 
-    CSHOP.shop_id = ?
-    AND CSHOP.close_date BETWEEN ? AND ?`,
+//           const openQuantityData = await sequelize.query(
+//             `SELECT 
+//     SUM(CSHOP.close_quantity * COALESCE(OSHOP.amount, PREV.amount)) AS variableCost
+// FROM 
+//     daily_close_shop_quantity AS CSHOP
+// LEFT JOIN 
+//     dayli_open_shop_quantity AS OSHOP 
+//     ON CSHOP.ass_id = OSHOP.ass_id 
+//     AND CSHOP.close_date = OSHOP.open_date
+// LEFT JOIN (
+//     SELECT 
+//         ass_id, 
+//         MAX(open_date) AS latest_date, 
+//         amount
+//     FROM 
+//         dayli_open_shop_quantity
+//     WHERE 
+//         open_date < ?
+//     GROUP BY 
+//         ass_id
+// ) AS PREV
+// ON CSHOP.ass_id = PREV.ass_id
+// WHERE 
+//     CSHOP.shop_id = ?
+//     AND CSHOP.close_date BETWEEN ? AND ?`,
+//             {
+//               replacements: [endDate, shopId, startDate, endDate],
+//               type: QueryTypes.SELECT,
+//             }
+//           );
+
+          const vData = await sequelize.query(
+            `SELECT SUM(daily_close_shop_quantity.close_quantity * assign_shop_product.amount) as variableCost FROM daily_close_shop_quantity 
+            INNER JOIN assign_shop_product ON daily_close_shop_quantity.ass_id = assign_shop_product.id 
+            WHERE daily_close_shop_quantity.shop_id = ? AND STR_TO_DATE(daily_close_shop_quantity.close_date, '%d-%m-%Y') 
+            BETWEEN STR_TO_DATE(?, '%d-%m-%Y') AND STR_TO_DATE(?, '%d-%m-%Y');`,
             {
-              replacements: [endDate, shopId, startDate, endDate],
+              replacements: [shopId, startDate, endDate],
               type: QueryTypes.SELECT,
             }
           );
 
-          const variableCost = openQuantityData[0]?.variableCost || 0;
+          const variableCost = vData[0]?.variableCost || 0;
 
           // Fetch other expenses
           const otherExpenseData = await sequelize.query(
@@ -4841,5 +4868,6 @@ module.exports = {
   fetchTotalCostShop,
   createOrderSession,
   handleJuspayResponse,
-  DeleteInventory
+  DeleteInventory,
+  DeletebtobOrder
 };
